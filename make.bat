@@ -4,4 +4,4 @@ del *.exe
 
 windres Resource.rc -o Resource.o
 
-g++ -mwindows -m64 -static -Wall -Wextra Template.cpp ListBoxWindow.cpp StatusBarWindow.cpp Resource.o -o Template.exe
+g++ -mwindows -m64 -static -Wall -Wextra File.cpp ListBoxWindow.cpp StatusBarWindow.cpp TreeViewWindow.cpp Resource.o -o File.exe

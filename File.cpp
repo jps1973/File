@@ -1,6 +1,6 @@
-// Template.cpp
+// File.cpp
 
-#include "Template.h"
+#include "File.h"
 
 void DoubleClickFunction( LPCTSTR lpszItemText )
 {
@@ -60,28 +60,38 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			// Get font
 			hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
-			// Create list box window
-			if( ListBoxWindowCreate( hWndMain, hInstance ) )
+			// Create tree view window
+			if( TreeViewWindowCreate( hWndMain, hInstance ) )
 			{
-				// Successfully created list box window
+				// Successfully created tree view window
 
-				// Set list box window font
-				ListBoxWindowSetFont( hFont );
+				// Set tree view window font
+				TreeViewWindowSetFont( hFont );
 
-				// Create status bar window
-				if( StatusBarWindowCreate( hWndMain, hInstance ) )
+				// Create list box window
+				if( ListBoxWindowCreate( hWndMain, hInstance ) )
 				{
-					// Successfully created status bar window
+					// Successfully created list box window
 
-					// Set status bar window font
-					StatusBarWindowSetFont( hFont );
+					// Set list box window font
+					ListBoxWindowSetFont( hFont );
 
-					// Set status bar window text
-					StatusBarWindowSetText( "Hello" );
+					// Create status bar window
+					if( StatusBarWindowCreate( hWndMain, hInstance ) )
+					{
+						// Successfully created status bar window
 
-				} // End of successfully created status bar window
+						// Set status bar window font
+						StatusBarWindowSetFont( hFont );
 
-			} // End of successfully created list box window
+						// Set status bar window text
+						StatusBarWindowSetText( "Hello" );
+
+					} // End of successfully created status bar window
+
+				} // End of successfully created list box window
+
+			} // End of successfully created tree view window
 
 			// Break out of switch
 			break;
@@ -94,7 +104,9 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			int nClientHeight;
 			RECT rcStatus;
 			int nStatusWindowHeight;
-			int nListBoxWindowHeight;
+			int nControlWindowHeight;
+			int nListBoxWindowWidth;
+			int nListBoxWindowLeft;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -108,10 +120,15 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 
 			// Calculate window sizes
 			nStatusWindowHeight		= ( rcStatus.bottom - rcStatus.top );
-			nListBoxWindowHeight	= ( nClientHeight - nStatusWindowHeight );
+			nControlWindowHeight	= ( nClientHeight - nStatusWindowHeight );
+			nListBoxWindowWidth		= ( nClientWidth - ( TREE_VIEW_WINDOW_WIDTH + WINDOW_BORDER_WIDTH ) );
 
-			// Move list box window
-			ListBoxWindowMove( 0, 0, nClientWidth, nListBoxWindowHeight, TRUE );
+			// Calculate window positions
+			nListBoxWindowLeft = ( TREE_VIEW_WINDOW_WIDTH - WINDOW_BORDER_WIDTH );
+
+			// Move control windows
+			TreeViewWindowMove( 0, 0, TREE_VIEW_WINDOW_WIDTH, nControlWindowHeight );
+			ListBoxWindowMove( nListBoxWindowLeft, 0, nListBoxWindowWidth, nControlWindowHeight, TRUE );
 
 			// Break out of switch
 			break;
