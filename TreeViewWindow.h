@@ -16,7 +16,11 @@
 
 #define TREE_VIEW_WINDOW_WIDTH													300
 
+#define TREE_VIEW_WINDOW_DUMMY_ITEM_TEXT										"<dummy>"
+
 BOOL IsTreeViewWindow( HWND hWnd );
+
+HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath );
 
 BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 

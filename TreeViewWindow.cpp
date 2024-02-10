@@ -12,6 +12,43 @@ BOOL IsTreeViewWindow( HWND hWnd )
 
 } // End of function IsTreeViewWindow
 
+HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath )
+{
+	HTREEITEM htiResult = NULL;
+	TV_INSERTSTRUCT tvis;
+
+	// Clear tree view insert structure
+	ZeroMemory( &tvis, sizeof( tvis ) );
+
+	// Initialise tree view insert structure
+	tvis.hParent				= TVI_ROOT;
+	tvis.hInsertAfter			= TVI_SORT;
+	tvis.item.mask				= ( TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE );
+	tvis.item.pszText			= ( LPTSTR )lpszItemPath;
+	tvis.item.iImage			= 0;
+	tvis.item.iSelectedImage	= 1;
+
+	// Add top level item
+	htiResult = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
+	
+	// Ensure that top level item was added
+	if( htiResult )
+	{
+		// Successfully added top level item
+
+		// Update tree view insert structure for dummy sub item
+		tvis.hParent		= htiResult;
+		tvis.item.pszText	= ( LPTSTR )TREE_VIEW_WINDOW_DUMMY_ITEM_TEXT;
+
+		// Add dummy sub item
+		SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
+
+	} // End of successfully added top level item
+
+	return htiResult;
+
+} // End of function TreeViewWindowAddTopLevelItem
+
 BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 {
 	BOOL bResult = FALSE;

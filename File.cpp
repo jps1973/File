@@ -465,6 +465,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
+			// Add top level item to tree view window
+			TreeViewWindowAddTopLevelItem( "C:\\" );
+
 			// Main message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
 			{
