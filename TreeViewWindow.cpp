@@ -65,6 +65,7 @@ BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 		bResult = TRUE;
 
 	} // End of successfully created tree view window
+
 	return bResult;
 
 } // End of function TreeViewWindowCreate
@@ -183,6 +184,20 @@ BOOL TreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSelectio
 		case NM_RCLICK:
 		{
 			// A right click notification code
+			HTREEITEM htiHighlighted;
+
+			// Get highlighted tree item
+			htiHighlighted = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_DROPHILITE, ( LPARAM )0 );
+
+			// Ensure that highlighted tree item was got
+			if( htiHighlighted )
+			{
+				// Successfully got highlighted tree item
+
+				// Select highlighted tree item
+				SendMessage( g_hWndTreeView, TVM_SELECTITEM, ( WPARAM )TVGN_CARET, ( LPARAM )htiHighlighted );
+
+			} // End of successfully got highlighted tree item
 
 			// Break out of switch
 			break;
