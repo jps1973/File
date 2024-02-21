@@ -2,6 +2,13 @@
 
 #include "File.h"
 
+void TreeViewWindowSelectionChangedFunction( LPCTSTR lpszItemPath )
+{
+	// Show item path on status bar window
+	StatusBarWindowSetText( lpszItemPath );
+
+} // End of function TreeViewWindowSelectionChangedFunction
+
 void DoubleClickFunction( LPCTSTR lpszItemText )
 {
 	// Display item text
@@ -315,6 +322,43 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			break;
 
 		} // End of a system command message
+		case WM_NOTIFY:
+		{
+			// A notify message
+			LPNMHDR lpNmHdr;
+
+			// Get notify message handler
+			lpNmHdr = ( LPNMHDR )lParam;
+
+			// See if notify message is from tree view window
+			if( IsTreeViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from tree view window
+
+				// Handle notify message from tree view window
+				if( !( TreeViewWindowHandleNotifyMessage( wParam, lParam, &TreeViewWindowSelectionChangedFunction ) ) )
+				{
+					// Notify message was not handled from tree view window
+
+					// Call default window procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+				} // End of notify message was not handled from tree view window
+
+			} // End of notify message is from tree view window
+			else
+			{
+				// Notify message is not from tree view window
+
+				// Call default window procedure
+				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+			} // End of notify message is not from tree view window
+
+			// Break out of switch
+			break;
+
+		} // End of a notify message
 		case WM_CONTEXTMENU:
 		{
 			// A context menu message
