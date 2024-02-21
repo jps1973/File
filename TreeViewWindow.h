@@ -22,7 +22,11 @@ BOOL IsTreeViewWindow( HWND hWnd );
 
 HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath );
 
+int TreeViewWindowAddSubFolders( HTREEITEM htiParentFolder );
+
 BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
+
+int TreeViewWindowDeleteAllSubItems( HTREEITEM htiParentItem );
 
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath );
 

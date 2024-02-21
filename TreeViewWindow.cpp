@@ -15,6 +15,7 @@ BOOL IsTreeViewWindow( HWND hWnd )
 HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath )
 {
 	HTREEITEM htiResult = NULL;
+
 	TV_INSERTSTRUCT tvis;
 
 	// Clear tree view insert structure
@@ -49,6 +50,111 @@ HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath )
 
 } // End of function TreeViewWindowAddTopLevelItem
 
+int TreeViewWindowAddSubFolders( HTREEITEM htiParentFolder )
+{
+	int nResult = 0;
+
+	// Allocate string memory
+	LPTSTR lpszParentFolderPath = new char[ STRING_LENGTH ];
+
+	// Get parent folder path
+	if( TreeViewWindowGetItemPath( htiParentFolder, lpszParentFolderPath ) )
+	{
+		// Successfully got parent folder path
+		WIN32_FIND_DATA wfd;
+		HANDLE hFind;
+
+		// Allocate string memory
+		LPTSTR lpszFullSearchPattern = new char[ STRING_LENGTH ];
+
+		// Copy parent folder path into full search pattern
+		lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
+
+		// Append all files filter onto full search pattern
+		lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
+
+		// Find first item
+		hFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+		// Ensure that first item was found
+		if(hFind != INVALID_HANDLE_VALUE )
+		{
+			// Successfully found first item
+			TV_INSERTSTRUCT tvis;
+			HTREEITEM htiSubFolder;
+
+			// Clear tree view insert structure
+			ZeroMemory( &tvis, sizeof( tvis ) );
+
+			// Initialise tree view insert structure
+			tvis.hInsertAfter			= TVI_SORT;
+			tvis.item.mask				= ( TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE );
+
+			// Delete sub items from tree view window
+			TreeViewWindowDeleteAllSubItems( htiParentFolder );
+
+			// Loop through all items
+			do
+			{
+				// See if current item is a folder
+				if ( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					// Current item is a folder
+
+					// Ensure that current item is not dots
+					if( wfd.cFileName[ 0 ] != ASCII_FULL_STOP_CHARACTER )
+					{
+						// Current item is not dots
+
+						// Update tree view insert structure for sub-folder item
+						tvis.hParent				= htiParentFolder;
+						tvis.item.pszText			= ( LPTSTR )wfd.cFileName;
+						tvis.item.iImage			= 0;
+						tvis.item.iSelectedImage	= 1;
+
+						// Add sub-folder item
+						htiSubFolder = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
+
+						// Ensure that sub-folder item was added
+						if( htiSubFolder )
+						{
+							// Successfully added sub-folder item
+
+							// Update tree view insert structure for dummy sub-item
+							tvis.hParent				= htiSubFolder;
+							tvis.item.pszText			= ( LPTSTR )TREE_VIEW_WINDOW_DUMMY_ITEM_TEXT;
+
+							// Add dummy sub-item
+							SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
+
+							// Update return value
+							nResult ++;
+
+						} // End of successfully added sub-folder item
+
+					} // End of current item is not dots
+
+				} // End of current item is a folder
+
+			} while( FindNextFile( hFind, &wfd ) != 0 ); // End of loop through all items
+
+			// Close file find
+			FindClose( hFind );
+
+		} // End of successfully found first item
+
+		// Free string memory
+		delete [] lpszFullSearchPattern;
+
+	} // End of successfully got parent folder path
+
+	// Free string memory
+	delete [] lpszParentFolderPath;
+
+	return nResult;
+
+} // End of function TreeViewWindowAddSubFolders
+
 BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 {
 	BOOL bResult = FALSE;
@@ -69,6 +175,45 @@ BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 	return bResult;
 
 } // End of function TreeViewWindowCreate
+
+int TreeViewWindowDeleteAllSubItems( HTREEITEM htiParentItem )
+{
+	int nResult = 0;
+
+	HTREEITEM htiSubItem;
+
+	// Get first sub-item
+	htiSubItem = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )htiParentItem );
+
+	// Loop through all sub-items
+	while( htiSubItem )
+	{
+		// Delete sub-item
+		if( SendMessage( g_hWndTreeView, TVM_DELETEITEM, ( WPARAM )0, ( LPARAM )htiSubItem ) )
+		{
+			// Successfully deleted sub-item
+
+			// Update return value
+			nResult ++;
+
+			// Get next sub-item
+			htiSubItem = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )htiParentItem );
+
+		} // End of successfully deleted sub-item
+		else
+		{
+			// Unable to delete sub-item
+
+			// Force exit from loop
+			htiSubItem = NULL;
+
+		} // End of unable to delete sub-item
+
+	}; // End of loop through all sub-items
+
+	return nResult;
+
+} // End of function TreeViewWindowDeleteAllSubItems
 
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath )
 {
@@ -206,6 +351,13 @@ BOOL TreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSelectio
 		case TVN_ITEMEXPANDING:
 		{
 			// A tree view item expanding notification code
+			LPNMTREEVIEW lpNmTreeView;
+
+			// Get tree view notification message handler
+			lpNmTreeView = ( LPNMTREEVIEW )lParam;
+
+			// Add sub-folders to tree view window
+			TreeViewWindowAddSubFolders( lpNmTreeView->itemNew.hItem );
 
 			// Break out of switch
 			break;
