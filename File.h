@@ -6,6 +6,8 @@
 #include "Common.h"
 #include "Resource.h"
 
+#include "ImageList.h"
+
 #include "ListBoxWindow.h"
 #include "StatusBarWindow.h"
 #include "TreeViewWindow.h"

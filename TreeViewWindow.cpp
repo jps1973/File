@@ -17,6 +17,10 @@ HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath )
 	HTREEITEM htiResult = NULL;
 
 	TV_INSERTSTRUCT tvis;
+	int nIconIndex;
+
+	// Get icon index
+	nIconIndex = ImageListGetIconIndex( lpszItemPath );
 
 	// Clear tree view insert structure
 	ZeroMemory( &tvis, sizeof( tvis ) );
@@ -26,8 +30,8 @@ HTREEITEM TreeViewWindowAddTopLevelItem( LPCTSTR lpszItemPath )
 	tvis.hInsertAfter			= TVI_SORT;
 	tvis.item.mask				= ( TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE );
 	tvis.item.pszText			= ( LPTSTR )lpszItemPath;
-	tvis.item.iImage			= 0;
-	tvis.item.iSelectedImage	= 1;
+	tvis.item.iImage			= nIconIndex;
+	tvis.item.iSelectedImage	= nIconIndex;
 
 	// Add top level item
 	htiResult = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
@@ -82,6 +86,10 @@ int TreeViewWindowAddSubFolders( HTREEITEM htiParentFolder )
 			// Successfully found first item
 			TV_INSERTSTRUCT tvis;
 			HTREEITEM htiSubFolder;
+			int nIconIndex;
+
+			// Allocate string memory
+			LPTSTR lpszSubFolderPath = new char[ STRING_LENGTH ];
 
 			// Clear tree view insert structure
 			ZeroMemory( &tvis, sizeof( tvis ) );
@@ -106,11 +114,20 @@ int TreeViewWindowAddSubFolders( HTREEITEM htiParentFolder )
 					{
 						// Current item is not dots
 
+						// Copy parent folder path into sub-folder path
+						lstrcpy( lpszSubFolderPath, lpszParentFolderPath );
+
+						// Append sub-folder name onto sub-folder path
+						lstrcat( lpszSubFolderPath, wfd.cFileName );
+
+						// Get icon index
+						nIconIndex = ImageListGetIconIndex( lpszSubFolderPath );
+
 						// Update tree view insert structure for sub-folder item
 						tvis.hParent				= htiParentFolder;
 						tvis.item.pszText			= ( LPTSTR )wfd.cFileName;
-						tvis.item.iImage			= 0;
-						tvis.item.iSelectedImage	= 1;
+						tvis.item.iImage			= nIconIndex;
+						tvis.item.iSelectedImage	= nIconIndex;
 
 						// Add sub-folder item
 						htiSubFolder = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
@@ -141,7 +158,20 @@ int TreeViewWindowAddSubFolders( HTREEITEM htiParentFolder )
 			// Close file find
 			FindClose( hFind );
 
+			// Free string memory
+			delete [] lpszSubFolderPath;
+
 		} // End of successfully found first item
+		else
+		{
+			// Unable to find first item
+
+			// This means that we don't have access to the folder
+
+			// Delete sub items from tree view window
+			TreeViewWindowDeleteAllSubItems( htiParentFolder );
+
+		} // End of unable to find first item
 
 		// Free string memory
 		delete [] lpszFullSearchPattern;
@@ -431,3 +461,11 @@ void TreeViewWindowSetFont( HFONT hFont )
 	::SendMessage( g_hWndTreeView, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
 } // End of function TreeViewWindowSetFont
+
+void TreeViewWindowSetImageList( HIMAGELIST hImageList )
+{
+	// Set image lists
+	::SendMessage( g_hWndTreeView, TVM_SETIMAGELIST, ( WPARAM )TVSIL_NORMAL, ( LPARAM )hImageList );
+	::SendMessage( g_hWndTreeView, TVM_SETIMAGELIST, ( WPARAM )TVSIL_STATE, ( LPARAM )hImageList );
+
+} // End of function TreeViewWindowSetImageList

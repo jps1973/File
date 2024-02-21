@@ -8,6 +8,8 @@
 #include "Ascii.h"
 #include "Common.h"
 
+#include "ImageList.h"
+
 #define TREE_VIEW_WINDOW_CLASS_NAME												WC_TREEVIEW
 
 #define TREE_VIEW_WINDOW_EXTENDED_STYLE											0
@@ -41,3 +43,5 @@ BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint 
 HWND TreeViewWindowSetFocus();
 
 void TreeViewWindowSetFont( HFONT hFont );
+
+void TreeViewWindowSetImageList( HIMAGELIST hImageList );

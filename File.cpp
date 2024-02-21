@@ -72,6 +72,12 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			{
 				// Successfully created tree view window
 
+				// Get system image list
+				ImageListGetSystem();
+
+				// Set tree view window image list
+				TreeViewWindowSetImageList( GetImageList() );
+
 				// Set tree view window font
 				TreeViewWindowSetFont( hFont );
 
