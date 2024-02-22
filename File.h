@@ -7,6 +7,7 @@
 #include "Resource.h"
 
 #include "ImageList.h"
+#include "SelectFolder.h"
 
 #include "ListBoxWindow.h"
 #include "StatusBarWindow.h"
@@ -37,6 +38,9 @@
 																				"Written by Jim Smith\r\n"			\
 																				"\r\n"								\
 																				"February 2024"
+
+
+#define SELECT_TOP_LEVEL_FOLDER_TITLE											"Select top level folder"
 
 #define UNABLE_TO_REGISTER_MAIN_WINDOW_CLASS_ERROR_MESSAGE						"Unable to Register Main Window Class"
 #define UNABLE_TO_CREATE_MAIN_WINDOW_ERROR_MESSAGE								"Unable to Create Main Window"

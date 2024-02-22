@@ -461,6 +461,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			LPWSTR *lpszArgumentList;
 			int nArgumentCount;
 
+			// Allocate string memory
+			LPTSTR lpszFolderPath = new char[ STRING_LENGTH ];
+
 			// Get system menu
 			hMenuSystem = GetSystemMenu( hWndMain, FALSE );
 
@@ -515,8 +518,29 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
-			// Add top level item to tree view window
-			TreeViewWindowAddTopLevelItem( "C:\\" );
+			// Initialise folder path
+			GetCurrentDirectory( STRING_LENGTH, lpszFolderPath );
+
+			// Select top-level folder
+			if( SelectFolder( SELECT_TOP_LEVEL_FOLDER_TITLE, lpszFolderPath ) )
+			{
+				// Successfully selected top-level folder
+				HTREEITEM htiTopLevel;
+
+				// Add top-level item to tree view window
+				htiTopLevel = TreeViewWindowAddTopLevelItem( lpszFolderPath );
+
+				// Ensure that top-level item was added to tree view window
+				if( htiTopLevel )
+				{
+					// Successfully added top-level item to tree view window
+
+					// Expand top level item
+					TreeViewWindowExpandItem( htiTopLevel );
+
+				} // End of successfully added top-level item to tree view window
+
+			} // End of successfully selected top-level folder
 
 			// Main message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
@@ -528,6 +552,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 				DispatchMessage( &msg );
 
 			}; // End of main message loop
+
+			// Free string memory
+			delete [] lpszFolderPath;
 
 		} // End of successfully created main window
 		else

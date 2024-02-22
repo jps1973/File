@@ -245,6 +245,12 @@ int TreeViewWindowDeleteAllSubItems( HTREEITEM htiParentItem )
 
 } // End of function TreeViewWindowDeleteAllSubItems
 
+BOOL TreeViewWindowExpandItem( HTREEITEM htiItem )
+{
+	// Expand item
+	return SendMessage( g_hWndTreeView, TVM_EXPAND, ( WPARAM )TVE_EXPAND, ( LPARAM )htiItem );
+
+} // End of function TreeViewWindowExpandItem
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath )
 {
 	BOOL bResult = FALSE;

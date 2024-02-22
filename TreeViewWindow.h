@@ -30,6 +30,8 @@ BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
 int TreeViewWindowDeleteAllSubItems( HTREEITEM htiParentItem );
 
+BOOL TreeViewWindowExpandItem( HTREEITEM htiItem );
+
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath );
 
 BOOL TreeViewWindowGetItemText( HTREEITEM htiItem, LPTSTR lpszItemText );
