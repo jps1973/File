@@ -374,6 +374,74 @@ BOOL TreeViewWindowGetRect( LPRECT lpRect )
 
 } // End of function TreeViewWindowGetRect
 
+int TreeViewWindowLoad( LPCTSTR lpszFileName )
+{
+	int nResult = 0;
+
+	HANDLE hFile;
+
+	// Open file
+	hFile = CreateFile( lpszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+
+	// Ensure that file was opened
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully opened file
+		DWORD dwFileSize;
+
+		// Get file size
+		dwFileSize = GetFileSize( hFile, NULL );
+
+		// Ensure that file size was got
+		if( dwFileSize != INVALID_FILE_SIZE )
+		{
+			// Successfully got file size
+
+			// Allocate string memory
+			LPTSTR lpszFileText = new char[ dwFileSize + sizeof( char ) ];
+
+			// Read file text
+			if( ReadFile( hFile, lpszFileText, dwFileSize, NULL, NULL ) )
+			{
+				// Successfully read file text
+				LPTSTR lpszFolderPath;
+
+				// Terminate file text
+				lpszFileText[ dwFileSize ] = ( char )NULL;
+
+				// Get first folder path
+				lpszFolderPath = strtok( lpszFileText, NEW_LINE_TEXT );
+
+				// Loop through all folder paths
+				while( lpszFolderPath )
+				{
+					// Add top-level folder
+					TreeViewWindowAddTopLevelItem( lpszFolderPath );
+
+					// Update return value
+					nResult ++;
+
+					// Get next folder path
+					lpszFolderPath = strtok( NULL, NEW_LINE_TEXT );
+
+				}; // End of loop through all folder paths
+
+			} // End of successfully read file text
+
+			// Free string memory
+			delete [] lpszFileText;
+
+		} // End of successfully got file size
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully opened file
+
+	return nResult;
+
+} // End of function TreeViewWindowLoad
+
 BOOL TreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSelectionChangedFunction )( LPCTSTR lpszItemPath ) )
 {
 	BOOL bResult = FALSE;
@@ -477,6 +545,51 @@ BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint 
 	return ::MoveWindow( g_hWndTreeView, nX, nY, nWidth, nHeight, bRepaint );
 
 } // End of function TreeViewWindowMove
+
+int TreeViewWindowSave( LPCTSTR lpszFileName )
+{
+	int nResult = 0;
+
+	HANDLE hFile;
+
+	// Open file
+	hFile = CreateFile( lpszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+
+	// Ensure that file was opened
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully opened file
+
+		/*
+		DWORD dwTextLength;
+		dwTextLength = GetWindowTextLength(hEdit);
+		// No need to bother if there's no text.
+		if(dwTextLength > 0)
+		{
+		LPSTR pszText;
+		DWORD dwBufferSize = dwTextLength + 1;
+		pszText = GlobalAlloc(GPTR, dwBufferSize);
+		if(pszText != NULL)
+		{
+		if(GetWindowText(hEdit, pszText, dwBufferSize))
+		{
+		DWORD dwWritten;
+		if(WriteFile(hFile, pszText, dwTextLength, &dwWritten, NULL))
+		bSuccess = TRUE;
+		}
+		GlobalFree(pszText);
+		}
+		}
+		*/
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully opened file
+
+	return nResult;
+
+} // End of function TreeViewWindowSave
 
 HWND TreeViewWindowSetFocus()
 {

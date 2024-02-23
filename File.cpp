@@ -578,8 +578,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
-			// Add top-level item to tree view window
-			TreeViewWindowAddTopLevelItem( TRUE );
+			// Load top-level folders
+			if( TreeViewWindowLoad( FOLDERS_FILE_NAME ) == 0 )
+			{
+				// No top-level folders were loaded
+
+				// Add top-level item to tree view window
+				TreeViewWindowAddTopLevelItem( TRUE );
+
+			} // End of no top-level folders were loaded
 
 			// Main message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )

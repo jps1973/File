@@ -40,9 +40,13 @@ BOOL TreeViewWindowGetItemText( HTREEITEM htiItem, LPTSTR lpszItemText );
 
 BOOL TreeViewWindowGetRect( LPRECT lpRect );
 
+int TreeViewWindowLoad( LPCTSTR lpszFileName );
+
 BOOL TreeViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, void( *lpSelectionChangedFunction )( LPCTSTR lpszItemPath ) );
 
 BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
+
+int TreeViewWindowSave( LPCTSTR lpszFileName );
 
 HWND TreeViewWindowSetFocus();
 

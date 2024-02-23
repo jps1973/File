@@ -40,6 +40,8 @@
 																				"February 2024"
 
 
+#define FOLDERS_FILE_NAME														"Folders.txt"
+
 #define SELECT_TOP_LEVEL_FOLDER_TITLE											"Select top level folder"
 
 #define UNABLE_TO_REGISTER_MAIN_WINDOW_CLASS_ERROR_MESSAGE						"Unable to Register Main Window Class"
