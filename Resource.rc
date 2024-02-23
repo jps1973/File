@@ -14,6 +14,8 @@ IDR_MAIN_MENU MENU
 	BEGIN
 	POPUP "&File"
 	BEGIN
+		MENUITEM "New Top Level Folder...",										IDM_FILE_NEW_TOP_LEVEL_FOLDER
+		MENUITEM SEPARATOR
 		MENUITEM "E&xit",														IDM_FILE_EXIT
 	END
 	POPUP "&Help"

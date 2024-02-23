@@ -34,6 +34,8 @@ BOOL TreeViewWindowExpandItem( HTREEITEM htiItem );
 
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath );
 
+BOOL TreeViewWindowGetItemPath( LPTSTR lpszItemPath );
+
 BOOL TreeViewWindowGetItemText( HTREEITEM htiItem, LPTSTR lpszItemText );
 
 BOOL TreeViewWindowGetRect( LPRECT lpRect );

@@ -251,6 +251,7 @@ BOOL TreeViewWindowExpandItem( HTREEITEM htiItem )
 	return SendMessage( g_hWndTreeView, TVM_EXPAND, ( WPARAM )TVE_EXPAND, ( LPARAM )htiItem );
 
 } // End of function TreeViewWindowExpandItem
+
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath )
 {
 	BOOL bResult = FALSE;
@@ -316,6 +317,29 @@ BOOL TreeViewWindowGetItemPath( HTREEITEM htiItem, LPTSTR lpszItemPath )
 
 	// Free string memory
 	delete [] lpszTemp;
+
+	return bResult;
+
+} // End of function TreeViewWindowGetItemPath
+
+BOOL TreeViewWindowGetItemPath( LPTSTR lpszItemPath )
+{
+	BOOL bResult = FALSE;
+
+	HTREEITEM htiSelected;
+
+	// Get selected tree item
+	htiSelected = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CARET, ( LPARAM )NULL );
+
+	// Ensure that selected tree item was got
+	if( htiSelected )
+	{
+		// Successfully got selected tree item
+
+		// Get item path
+		bResult = TreeViewWindowGetItemPath( htiSelected, lpszItemPath );
+
+	} // End of successfully got selected tree item
 
 	return bResult;
 

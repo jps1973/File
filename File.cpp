@@ -2,6 +2,58 @@
 
 #include "File.h"
 
+BOOL TreeViewWindowAddTopLevelItem( BOOL bExpand )
+{
+	BOOL bResult = FALSE;
+
+	// Allocate string memory
+	LPTSTR lpszTopLevelFolderPath = new char[ STRING_LENGTH ];
+
+	// Get selected item path
+	if( !( TreeViewWindowGetItemPath( lpszTopLevelFolderPath ) ) )
+	{
+		// Unable to get selected item path
+
+		// Get current folder path
+		GetCurrentDirectory( STRING_LENGTH, lpszTopLevelFolderPath );
+
+	} // End of unable to get selected item path
+
+	// Select top-level folder
+	if( SelectFolder( SELECT_TOP_LEVEL_FOLDER_TITLE, lpszTopLevelFolderPath ) )
+	{
+		// Successfully selected top-level folder
+		HTREEITEM htiTopLevel;
+
+		// Add top-level folder to tree view window
+		htiTopLevel = TreeViewWindowAddTopLevelItem( lpszTopLevelFolderPath );
+
+		// Ensure that top-level folder was added to tree view window
+		if( htiTopLevel )
+		{
+			// Successfully added top-level folder to tree view window
+
+			// See if top level folder needs to be expanded
+			if( bExpand )
+			{
+				// Top level folder needs to be expanded
+
+				// Expand top level folder
+				TreeViewWindowExpandItem( htiTopLevel );
+
+			} // End of top level folder needs to be expanded
+
+		} // End of successfully added top-level folder to tree view window
+
+	} // End of successfully selected top-level folder
+
+	// Free string memory
+	delete [] lpszTopLevelFolderPath;
+
+	return bResult;
+
+} // End of function TreeViewWindowAddTopLevelItem
+
 void TreeViewWindowSelectionChangedFunction( LPCTSTR lpszItemPath )
 {
 	// Show item path on status bar window
@@ -230,6 +282,17 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			// Select command
 			switch( LOWORD( wParam ) )
 			{
+				case IDM_FILE_NEW_TOP_LEVEL_FOLDER:
+				{
+					// A file new top-level folder command
+
+					// Add top-level item to tree view window
+					TreeViewWindowAddTopLevelItem( TRUE );
+
+					// Break out of switch
+					break;
+
+				} // End of a file new top-level folder command
 				case IDM_FILE_EXIT:
 				{
 					// A file exit command
@@ -461,9 +524,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			LPWSTR *lpszArgumentList;
 			int nArgumentCount;
 
-			// Allocate string memory
-			LPTSTR lpszFolderPath = new char[ STRING_LENGTH ];
-
 			// Get system menu
 			hMenuSystem = GetSystemMenu( hWndMain, FALSE );
 
@@ -518,29 +578,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
-			// Initialise folder path
-			GetCurrentDirectory( STRING_LENGTH, lpszFolderPath );
-
-			// Select top-level folder
-			if( SelectFolder( SELECT_TOP_LEVEL_FOLDER_TITLE, lpszFolderPath ) )
-			{
-				// Successfully selected top-level folder
-				HTREEITEM htiTopLevel;
-
-				// Add top-level item to tree view window
-				htiTopLevel = TreeViewWindowAddTopLevelItem( lpszFolderPath );
-
-				// Ensure that top-level item was added to tree view window
-				if( htiTopLevel )
-				{
-					// Successfully added top-level item to tree view window
-
-					// Expand top level item
-					TreeViewWindowExpandItem( htiTopLevel );
-
-				} // End of successfully added top-level item to tree view window
-
-			} // End of successfully selected top-level folder
+			// Add top-level item to tree view window
+			TreeViewWindowAddTopLevelItem( TRUE );
 
 			// Main message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
@@ -552,9 +591,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 				DispatchMessage( &msg );
 
 			}; // End of main message loop
-
-			// Free string memory
-			delete [] lpszFolderPath;
 
 		} // End of successfully created main window
 		else
