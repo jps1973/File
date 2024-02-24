@@ -559,28 +559,51 @@ int TreeViewWindowSave( LPCTSTR lpszFileName )
 	if( hFile != INVALID_HANDLE_VALUE )
 	{
 		// Successfully opened file
+		TVITEM tvItem;
 
-		/*
-		DWORD dwTextLength;
-		dwTextLength = GetWindowTextLength(hEdit);
-		// No need to bother if there's no text.
-		if(dwTextLength > 0)
+		// Allocate string memory
+		LPTSTR lpszItemText = new char[ STRING_LENGTH ];
+
+		// Clear tree view item structure
+		ZeroMemory( &tvItem, sizeof( tvItem ) );
+
+		// Initialise tree view item structure
+		tvItem.mask			= TVIF_TEXT;
+		tvItem.pszText		= lpszItemText;
+		tvItem.cchTextMax	= STRING_LENGTH;
+		tvItem.hItem		= ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )TVI_ROOT );
+
+		// Loop through all items
+		while( tvItem.hItem )
 		{
-		LPSTR pszText;
-		DWORD dwBufferSize = dwTextLength + 1;
-		pszText = GlobalAlloc(GPTR, dwBufferSize);
-		if(pszText != NULL)
-		{
-		if(GetWindowText(hEdit, pszText, dwBufferSize))
-		{
-		DWORD dwWritten;
-		if(WriteFile(hFile, pszText, dwTextLength, &dwWritten, NULL))
-		bSuccess = TRUE;
-		}
-		GlobalFree(pszText);
-		}
-		}
-		*/
+			// Get item text
+			SendMessage( g_hWndTreeView, TVM_GETITEM, ( WPARAM )0, ( LPARAM )&tvItem );
+
+			// Write item text to file
+			if( WriteFile( hFile, lpszItemText, lstrlen( lpszItemText ), NULL, NULL ) )
+			{
+				// Successfully wrote item text to file
+
+				// Write new line text to file
+				WriteFile( hFile, NEW_LINE_TEXT, lstrlen( NEW_LINE_TEXT ), NULL, NULL );
+
+				// Update return value
+				nResult ++;
+
+				// Get next item
+				tvItem.hItem = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_NEXT, ( LPARAM )tvItem.hItem );
+
+			} // End of successfully wrote item text to file
+			else
+			{
+				// Unable to write item text to file
+
+				// Force exit from loop
+				tvItem.hItem = NULL;
+
+			} // End of unable to write item text to file
+
+		}; // End of loop through all items
 
 		// Close file
 		CloseHandle( hFile );
