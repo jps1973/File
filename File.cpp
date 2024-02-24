@@ -133,13 +133,13 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 				// Set tree view window font
 				TreeViewWindowSetFont( hFont );
 
-				// Create list box window
-				if( ListBoxWindowCreate( hWndMain, hInstance ) )
+				// Create list view window
+				if( ListViewWindowCreate( hWndMain, hInstance ) )
 				{
-					// Successfully created list box window
+					// Successfully created list view window
 
-					// Set list box window font
-					ListBoxWindowSetFont( hFont );
+					// Set list view window font
+					ListViewWindowSetFont( hFont );
 
 					// Create status bar window
 					if( StatusBarWindowCreate( hWndMain, hInstance ) )
@@ -154,7 +154,7 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 
 					} // End of successfully created status bar window
 
-				} // End of successfully created list box window
+				} // End of successfully created list view window
 
 			} // End of successfully created tree view window
 
@@ -170,8 +170,8 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			RECT rcStatus;
 			int nStatusWindowHeight;
 			int nControlWindowHeight;
-			int nListBoxWindowWidth;
-			int nListBoxWindowLeft;
+			int nListViewWindowWidth;
+			int nListViewWindowLeft;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -186,14 +186,14 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			// Calculate window sizes
 			nStatusWindowHeight		= ( rcStatus.bottom - rcStatus.top );
 			nControlWindowHeight	= ( nClientHeight - nStatusWindowHeight );
-			nListBoxWindowWidth		= ( nClientWidth - ( TREE_VIEW_WINDOW_WIDTH + WINDOW_BORDER_WIDTH ) );
+			nListViewWindowWidth	= ( nClientWidth - ( TREE_VIEW_WINDOW_WIDTH + WINDOW_BORDER_WIDTH ) );
 
 			// Calculate window positions
-			nListBoxWindowLeft = ( TREE_VIEW_WINDOW_WIDTH - WINDOW_BORDER_WIDTH );
+			nListViewWindowLeft = ( TREE_VIEW_WINDOW_WIDTH - WINDOW_BORDER_WIDTH );
 
 			// Move control windows
 			TreeViewWindowMove( 0, 0, TREE_VIEW_WINDOW_WIDTH, nControlWindowHeight );
-			ListBoxWindowMove( nListBoxWindowLeft, 0, nListBoxWindowWidth, nControlWindowHeight, TRUE );
+			ListViewWindowMove( nListViewWindowLeft, 0, nListViewWindowWidth, nControlWindowHeight, TRUE );
 
 			// Break out of switch
 			break;
@@ -203,8 +203,8 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 		{
 			// An activate message
 
-			// Focus on list box window
-			ListBoxWindowSetFocus();
+			// Focus on list view window
+			ListViewWindowSetFocus();
 
 			// Break out of switch
 			break;
@@ -259,8 +259,8 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 					{
 						// Successfully got file path
 
-						// Add file path to list box window
-						ListBoxWindowAddString( lpszFilePath );
+						// Add file path to list view window
+						//ListViewWindowAddString( lpszFilePath );
 
 					} // End of successfully got file path
 
@@ -319,30 +319,30 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 				{
 					// Default command
 
-					// See if command message is from list box window
-					if( IsListBoxWindow( ( HWND )lParam ) )
+					// See if command message is from list view window
+					if( IsListViewWindow( ( HWND )lParam ) )
 					{
-						// Command message is from list box window
+						// Command message is from list view window
 
-						// Handle command message from list box window
-						if( !( ListBoxWindowHandleCommandMessage( wParam, lParam, &DoubleClickFunction, &SelectionChangedFunction ) ) )
+						// Handle command message from list view window
+						if( !( ListViewWindowHandleCommandMessage( wParam, lParam, &DoubleClickFunction, &SelectionChangedFunction ) ) )
 						{
-							// Command message was not handled from list box window
+							// Command message was not handled from list view window
 
 							// Call default procedure
 							lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
-						} // End of command message was not handled from list box window
+						} // End of command message was not handled from list view window
 
-					} // End of command message is from list box window
+					} // End of command message is from list view window
 					else
 					{
-						// Command message is not from list box window
+						// Command message is not from list view window
 
 						// Call default procedure
 						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
-					} // End of command message is not from list box window
+					} // End of command message is not from list view window
 
 					// Break out of switch
 					break;
@@ -565,8 +565,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 					// Terminate argument
 					lpszArgument[ nSizeNeeded ] = ( char )NULL;
 
-					// Add argument to list box window
-					ListBoxWindowAddString( lpszArgument );
+					// Add argument to list view window
+					//ListViewWindowAddString( lpszArgument );
 
 				}; // End of loop through arguments
 

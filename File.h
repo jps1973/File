@@ -9,7 +9,7 @@
 #include "ImageList.h"
 #include "SelectFolder.h"
 
-#include "ListBoxWindow.h"
+#include "ListViewWindow.h"
 #include "StatusBarWindow.h"
 #include "TreeViewWindow.h"
 
