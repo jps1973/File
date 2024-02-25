@@ -51,9 +51,11 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
 		// Successfully found first item
 		LVITEM lvItem;
 		int nIconIndex;
+		SYSTEMTIME stModified;
 
 		// Allocate string memory
-		LPTSTR lpszFoundFilePath = new char[ STRING_LENGTH ];
+		LPTSTR lpszFoundFilePath	= new char[ STRING_LENGTH ];
+		LPTSTR lpszModifiedTime		= new char[ STRING_LENGTH ];
 
 		// Clear list view item structure
 		ZeroMemory( &lvItem, sizeof( lvItem ) );
@@ -96,6 +98,23 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
 				{
 					// Successfully added current file name to list view window
 
+					// Get modified file time
+					if( FileTimeToSystemTime( ( &( wfd.ftLastWriteTime ) ), &stModified ) )
+					{
+						// Successfully got modified file time
+
+						// Format modified time
+						wsprintf( lpszModifiedTime, LIST_VIEW_WINDOW_MODIFIED_TIME_FORMAT_STRING, stModified.wYear, stModified.wMonth, stModified.wDay, stModified.wHour, stModified.wMinute, stModified.wSecond );
+						
+						// Update list view item structure for modified time
+						lvItem.iSubItem		= LIST_VIEW_WINDOW_MODIFIED_COLUMN_ID;
+						lvItem.pszText		= lpszModifiedTime;
+
+						// Add modified time to list view window
+						lvItem.iItem = SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+					} // End of successfully got modified file time
+
 					// Update list view item structure for next item
 					lvItem.iItem ++;
 
@@ -115,7 +134,8 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
 		FindClose( hFind );
 
 		// Free string memory
-		delete lpszFoundFilePath;
+		delete [] lpszFoundFilePath;
+		delete [] lpszModifiedTime;
 
 	} // End of successfully found first item
 
