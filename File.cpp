@@ -2,6 +2,20 @@
 
 #include "File.h"
 
+void ListViewWindowDoubleClickFunction( LPCTSTR lpszFilePath )
+{
+	// Display file path
+	MessageBox( NULL, lpszFilePath, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+
+} // End of function ListViewWindowDoubleClickFunction
+
+void ListViewWindowSelectionChangedFunction( LPCTSTR lpszFilePath )
+{
+	// Show file path on status bar window
+	StatusBarWindowSetText( lpszFilePath );
+
+} // End of function ListViewWindowSelectionChangedFunction
+
 BOOL TreeViewWindowAddTopLevelItem( BOOL bExpand )
 {
 	BOOL bResult = FALSE;
@@ -333,30 +347,8 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 				{
 					// Default command
 
-					// See if command message is from list view window
-					if( IsListViewWindow( ( HWND )lParam ) )
-					{
-						// Command message is from list view window
-
-						// Handle command message from list view window
-						if( !( ListViewWindowHandleCommandMessage( wParam, lParam, &DoubleClickFunction, &SelectionChangedFunction ) ) )
-						{
-							// Command message was not handled from list view window
-
-							// Call default procedure
-							lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
-
-						} // End of command message was not handled from list view window
-
-					} // End of command message is from list view window
-					else
-					{
-						// Command message is not from list view window
-
-						// Call default procedure
-						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
-
-					} // End of command message is not from list view window
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 					// Break out of switch
 					break;
@@ -429,14 +421,29 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 				} // End of notify message was not handled from tree view window
 
 			} // End of notify message is from tree view window
+			else if( IsListViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from list view window
+
+				// Handle notify message from list view window
+				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &ListViewWindowDoubleClickFunction, &ListViewWindowSelectionChangedFunction ) ) )
+				{
+					// Notify message was not handled from list view window
+
+					// Call default window procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+				} // End of notify message was not handled from list view window
+
+			} // End of notify message is from control window
 			else
 			{
-				// Notify message is not from tree view window
+				// Notify message is not from control window
 
 				// Call default window procedure
 				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
-			} // End of notify message is not from tree view window
+			} // End of notify message is not from control window
 
 			// Break out of switch
 			break;

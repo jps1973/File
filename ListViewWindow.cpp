@@ -197,6 +197,55 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 } // End of function ListViewWindowCreate
 
+int ListViewWwidowGetFilePath( int nWhichItem, LPTSTR lpszFilePath )
+{
+	int nResult;
+
+	LVITEM lvItem;
+
+	// Copy parent folder path into file path
+	lstrcpy( lpszFilePath, g_lpszParentFolderPath );
+
+	// Clear list view item structure
+	ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+	// Initialise list view item structure
+	lvItem.mask			= LVIF_TEXT;
+	lvItem.iItem		= nWhichItem;
+	lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+	lvItem.pszText		= ( lpszFilePath + lstrlen( lpszFilePath ) );
+	lvItem.cchTextMax	= STRING_LENGTH;
+
+	// Append item text onto file path
+	nResult = SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )nWhichItem, ( LPARAM )&lvItem ); 
+
+	return nResult;
+
+} // End of function ListViewWwidowGetFilePath
+
+int ListViewWwidowGetItemText( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemText )
+{
+	int nResult;
+
+	LVITEM lvItem;
+
+	// Clear list view item structure
+	ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+	// Initialise list view item structure
+	lvItem.mask			= LVIF_TEXT;
+	lvItem.iItem		= nWhichItem;
+	lvItem.iSubItem		= nWhichSubItem;
+	lvItem.pszText		= lpszItemText;
+	lvItem.cchTextMax	= STRING_LENGTH;
+
+	// Get item text
+	nResult = SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )nWhichItem, ( LPARAM )&lvItem ); 
+
+	return nResult;
+
+} // End of function ListViewWwidowGetItemText
+
 BOOL ListViewWindowGetRect( LPRECT lpRect )
 {
 	// Get list view window rect
@@ -204,13 +253,87 @@ BOOL ListViewWindowGetRect( LPRECT lpRect )
 
 } // End of function ListViewWindowGetRect
 
-BOOL ListViewWindowHandleCommandMessage( WPARAM wParam, LPARAM, void( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), void( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ) )
+BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpDoubleClickFunction )( LPCTSTR lpszFilePath ), void( *lpSelectionChangedFunction )( LPCTSTR lpszFilePath ) )
 {
 	BOOL bResult = FALSE;
 
-	// Select list view window notification code
-	switch( HIWORD( wParam ) )
+	LPNMHDR lpNmHdr;
+
+	// Get notify message handler
+	lpNmHdr = ( LPNMHDR )lParam;
+
+	// Select tree view window notification code
+	switch( lpNmHdr->code )
 	{
+		case NM_DBLCLK:
+		{
+			// A list view window double click notification code
+			LPNMLISTVIEW lpNmListView;
+
+			// Allocate string memory
+			LPTSTR lpszFilePath = new char[ STRING_LENGTH ];
+
+			// Get list view notify message information
+			lpNmListView = ( LPNMLISTVIEW )lParam;
+
+			// Get file path
+			if( ListViewWwidowGetFilePath( lpNmListView->iItem, lpszFilePath ) )
+			{
+				// Successfully got file path
+
+				// Call double click function
+				( *lpDoubleClickFunction )( lpszFilePath );
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully got file path
+
+			// Free string memory
+			delete [] lpszFilePath;
+
+			// Break out of switch
+			break;
+
+		} // End of a list view window double click notification code
+		case LVN_ITEMCHANGED:
+		{
+			// A list view window item changed notification code
+			LPNMLISTVIEW lpNmListView;
+
+			// Get list view notify message information
+			lpNmListView = ( LPNMLISTVIEW )lParam;
+
+			// Ensure that item state has changed to selected
+			if( ( lpNmListView->uNewState ^  lpNmListView->uOldState ) & LVIS_SELECTED )
+			{
+				// Item state has changed to selected
+
+				// Allocate string memory
+				LPTSTR lpszFilePath = new char[ STRING_LENGTH ];
+
+				// Get file path
+				if( ListViewWwidowGetFilePath( lpNmListView->iItem, lpszFilePath ) )
+				{
+					// Successfully got file path
+
+					// Call selection changed function
+					( *lpSelectionChangedFunction )( lpszFilePath );
+
+					// Update return value
+					bResult = TRUE;
+
+				} // End of successfully got file path
+
+				// Free string memory
+				delete [] lpszFilePath;
+
+			} // End of item state has changed to selected
+
+			// Break out of switch
+			break;
+
+		} // End of a list view window item changed notification code
 		default:
 		{
 			// Default notification code
@@ -222,11 +345,11 @@ BOOL ListViewWindowHandleCommandMessage( WPARAM wParam, LPARAM, void( *lpDoubleC
 
 		} // End of default notification code
 
-	}; // End of selection for list view window notification code
+	}; // End of selection for tree view window notification code
 
 	return bResult;
 
-} // End of function ListViewWindowHandleCommandMessage
+} // End of function ListViewWindowHandleNotifyMessage
 
 BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
 {

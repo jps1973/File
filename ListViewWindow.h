@@ -35,9 +35,13 @@ int ListViewWindowAutoSizeAllColumns();
 
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
+int ListViewWwidowGetFilePath( int nWhichItem, LPTSTR lpszFilePath );
+
+int ListViewWwidowGetItemText( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemText );
+
 BOOL ListViewWindowGetRect( LPRECT lpRect );
 
-BOOL ListViewWindowHandleCommandMessage( WPARAM wParam, LPARAM lParam, void( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), void( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ) );
+BOOL ListViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, void( *lpDoubleClickFunction )( LPCTSTR lpszFilePath ), void( *lpSelectionChangedFunction )( LPCTSTR lpszFilePath ) );
 
 BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 
