@@ -195,6 +195,9 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			TreeViewWindowMove( 0, 0, TREE_VIEW_WINDOW_WIDTH, nControlWindowHeight );
 			ListViewWindowMove( nListViewWindowLeft, 0, nListViewWindowWidth, nControlWindowHeight, TRUE );
 
+			// Auto-size all list view window columns
+			ListViewWindowAutoSizeAllColumns();
+
 			// Break out of switch
 			break;
 
