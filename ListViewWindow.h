@@ -29,6 +29,8 @@ typedef enum ListViewWindowColumns
 
 BOOL IsListViewWindow( HWND hWnd );
 
+int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter );
+
 int ListViewWindowAutoSizeAllColumns();
 
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );

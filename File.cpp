@@ -56,8 +56,22 @@ BOOL TreeViewWindowAddTopLevelItem( BOOL bExpand )
 
 void TreeViewWindowSelectionChangedFunction( LPCTSTR lpszItemPath )
 {
-	// Show item path on status bar window
-	StatusBarWindowSetText( lpszItemPath );
+	int nFileCount;
+
+	// Allocate string memory
+	LPTSTR lpszStatusMessage = new char[ STRING_LENGTH ];
+
+	// Add files to list view window
+	nFileCount = ListViewWindowAddFiles( lpszItemPath, ALL_FILES_FILTER );
+
+	// Format status message
+	wsprintf( lpszStatusMessage, POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszItemPath, nFileCount );
+
+	// Show status message on status bar window
+	StatusBarWindowSetText( lpszStatusMessage );
+
+	// Free string memory
+	delete [] lpszStatusMessage;
 
 } // End of function TreeViewWindowSelectionChangedFunction
 
@@ -148,9 +162,6 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 
 						// Set status bar window font
 						StatusBarWindowSetFont( hFont );
-
-						// Set status bar window text
-						StatusBarWindowSetText( "Hello" );
 
 					} // End of successfully created status bar window
 

@@ -4,6 +4,7 @@
 
 // Global variables
 HWND g_hWndListView;
+LPTSTR g_lpszParentFolderPath;
 
 BOOL IsListViewWindow( HWND hWnd )
 {
@@ -11,6 +12,102 @@ BOOL IsListViewWindow( HWND hWnd )
 	return( hWnd == g_hWndListView );
 
 } // End of function IsListViewWindow
+
+int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
+{
+	int nResult = 0;
+
+	WIN32_FIND_DATA  wfd;
+	HANDLE hFind;
+
+	// Allocate string memory
+	LPTSTR lpszFullSearchPattern = new char[ STRING_LENGTH ];
+
+	// Copy folder path into global parent folder path
+	lstrcpy( g_lpszParentFolderPath, lpszFolderPath );
+
+	// Ensure that global parent folder path ends with a back-slash
+	if( g_lpszParentFolderPath[ lstrlen( g_lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+	{
+		// Global parent folder path does not end with a back-slash
+
+		// Append a back-slash onto global parent folder path
+		lstrcat( g_lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
+
+	} // End of global parent folder path does not end with a back-slash
+
+	// Copy global parent folder path into full search pattern
+	lstrcpy( lpszFullSearchPattern, g_lpszParentFolderPath );
+
+	// Append file filter onto full search pattern
+	lstrcat( lpszFullSearchPattern, lpszFileFilter );
+
+	// Find first item
+	hFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+	// Ensure that first item was found
+	if( hFind != INVALID_HANDLE_VALUE ) 
+	{
+		// Successfully found first item
+		LVITEM lvItem;
+
+		// Clear list view item structure
+		ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+		// Initialise list view item structure
+		lvItem.mask			= LVIF_TEXT;
+		lvItem.cchTextMax	= STRING_LENGTH;
+		lvItem.iItem		= 0;
+
+		// Delete all items from list view window
+		SendMessage( g_hWndListView, LVM_DELETEALLITEMS, ( WPARAM )NULL, ( LPARAM )NULL );
+
+		// Loop through all items
+		do
+		{
+			// See if current item is a file
+			if( !( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
+			{
+				// Current item is a file
+
+				// Update list view item structure for current file name
+				lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+				lvItem.pszText		= wfd.cFileName;
+
+				// Add current file name to list view window
+				lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+				// Ensure that current file name was added to list view window
+				if( lvItem.iItem >= 0 )
+				{
+					// Successfully added current file name to list view window
+
+					// Update list view item structure for next item
+					lvItem.iItem ++;
+
+					// Update return value
+					nResult ++;
+
+				} // End of successfully added current file name to list view window
+
+			} // End of current item is a file
+
+		} while( FindNextFile( hFind, &wfd ) != 0 ); // End of loop through all items
+
+		// Auto-size all list view window columns
+		ListViewWindowAutoSizeAllColumns();
+
+		// Close file find
+		FindClose( hFind );
+
+	} // End of successfully found first item
+
+	// Free string memory
+	delete [] lpszFullSearchPattern;
+
+	return nResult;
+
+} // End of function ListViewWindowAddFiles
 
 int ListViewWindowAutoSizeAllColumns()
 {
@@ -57,8 +154,13 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 	{
 		// Successfully created list view window
 		LVCOLUMN lvColumn;
-		
 		LPCTSTR lpszColumnTitles [] = LIST_VIEW_WINDOW_COLUMN_TITLES;
+
+		// Allocate global memory
+		g_lpszParentFolderPath = new char[ STRING_LENGTH ];
+
+		// Clear parent folder path
+		g_lpszParentFolderPath[ 0 ] = ( char )NULL;
 
 		// Clear list view column structure
 		ZeroMemory( &lvColumn, sizeof( lvColumn ) );
@@ -78,7 +180,7 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 			// Update list view column structure for current column
 			lvColumn.pszText = ( LPTSTR )lpszColumnTitles[ lvColumn.iSubItem ];
 
-			// Add column to list view window
+			// Add column to list view window
 			SendMessage( g_hWndListView, LVM_INSERTCOLUMN, ( WPARAM )lvColumn.iSubItem, ( LPARAM )&lvColumn );
 
 		}; // End of loop through columns
