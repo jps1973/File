@@ -166,6 +166,9 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 				{
 					// Successfully created list view window
 
+					// Set list view window image list
+					ListViewWindowSetImageList( GetImageList() );
+
 					// Set list view window font
 					ListViewWindowSetFont( hFont );
 

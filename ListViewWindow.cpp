@@ -50,12 +50,16 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
 	{
 		// Successfully found first item
 		LVITEM lvItem;
+		int nIconIndex;
+
+		// Allocate string memory
+		LPTSTR lpszFoundFilePath = new char[ STRING_LENGTH ];
 
 		// Clear list view item structure
 		ZeroMemory( &lvItem, sizeof( lvItem ) );
 
 		// Initialise list view item structure
-		lvItem.mask			= LVIF_TEXT;
+		lvItem.mask			= ( LVIF_TEXT | LVIF_IMAGE );
 		lvItem.cchTextMax	= STRING_LENGTH;
 		lvItem.iItem		= 0;
 
@@ -70,9 +74,19 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
 			{
 				// Current item is a file
 
+				// Copy parent folder path into found file path
+				lstrcpy( lpszFoundFilePath, g_lpszParentFolderPath );
+
+				// Append found file name onto found file path
+				lstrcat( lpszFoundFilePath, wfd.cFileName );
+
+				// Get icon index for found file
+				nIconIndex = ImageListGetIconIndex( lpszFoundFilePath );
+
 				// Update list view item structure for current file name
 				lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
 				lvItem.pszText		= wfd.cFileName;
+				lvItem.iImage		= nIconIndex;
 
 				// Add current file name to list view window
 				lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
@@ -99,6 +113,9 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
 
 		// Close file find
 		FindClose( hFind );
+
+		// Free string memory
+		delete lpszFoundFilePath;
 
 	} // End of successfully found first item
 
@@ -371,3 +388,11 @@ void ListViewWindowSetFont( HFONT hFont )
 	::SendMessage( g_hWndListView, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
 } // End of function ListViewWindowSetFont
+
+void ListViewWindowSetImageList( HIMAGELIST hImageList )
+{
+	// Set image lists
+	SendMessage( g_hWndListView, LVM_SETIMAGELIST, ( WPARAM )LVSIL_NORMAL, ( LPARAM )hImageList );
+	SendMessage( g_hWndListView, LVM_SETIMAGELIST, ( WPARAM )LVSIL_SMALL, ( LPARAM )hImageList );
+
+} // End of function ListViewWindowSetImageList
