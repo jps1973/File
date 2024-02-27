@@ -37,6 +37,8 @@ int ListViewWindowAddFiles( LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter );
 
 int ListViewWindowAutoSizeAllColumns();
 
+int CALLBACK ListViewWindowCompareProcedure( LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort );
+
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
 int ListViewWwidowGetFilePath( int nWhichItem, LPTSTR lpszFilePath );
