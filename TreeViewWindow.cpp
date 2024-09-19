@@ -63,9 +63,107 @@ BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 		bResult = TRUE;
 
 	} // End of successfully created tree view window
+
 	return bResult;
 
 } // End of function TreeViewWindowCreate
+
+BOOL TreeViewWindowGetItemPath( HTREEITEM htiRequired, LPTSTR lpszItemPath )
+{
+	BOOL bResult = TRUE; // Assume success
+
+	TVITEM tvi;
+
+	// Allocate string memory
+	LPTSTR lpszCurrentItemText	= new char[ STRING_LENGTH ];
+	LPTSTR lpszTemporary		= new char[ STRING_LENGTH ];
+
+	// Clear tree view item structure
+	ZeroMemory( &tvi, sizeof( tvi ) );
+
+	// Initialise tree view item structure for required item
+	tvi.mask		= TVIF_TEXT;
+	tvi.pszText		= lpszCurrentItemText;
+	tvi.cchTextMax	= STRING_LENGTH;
+	tvi.hItem		= htiRequired;
+
+	// Clear item path
+	lpszItemPath[ 0 ] = ( char )NULL;
+
+	// Loop through all items
+	while( tvi.hItem )
+	{
+		// Get current item text
+		if( SendMessage( g_hWndTreeView, TVM_GETITEM, ( WPARAM )TVGN_CARET, ( LPARAM )&tvi ) )
+		{
+			// Successfully got current item text
+
+			// Copy item path into temporary string
+			lstrcpy( lpszTemporary, lpszItemPath );
+
+			// Copy current item text into item path
+			lstrcpy( lpszItemPath, lpszCurrentItemText );
+
+			// Ensure that item path ends in a back-slash
+			if( lpszItemPath[ lstrlen( lpszItemPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+			{
+				// Item path does not end in a back-slash
+
+				// Append a back-slash onto item path
+				lstrcat( lpszItemPath, ASCII_BACK_SLASH_STRING );
+
+			} // End of item path does not end in a back-slash
+
+			// Append temporary string onto item path
+			lstrcat( lpszItemPath, lpszTemporary );
+
+			// Get parent item
+			tvi.hItem = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_PARENT, ( LPARAM )tvi.hItem );
+
+		} // End of successfully got current item text
+		else
+		{
+			// Unable to get current item text
+
+			// Update return value
+			bResult = FALSE;
+
+			// Force exit from loop
+			tvi.hItem = NULL;
+
+		} // End of unable to get current item text
+
+	}; // End of loop through all items
+
+	// Free string memory
+	delete [] lpszCurrentItemText;
+	delete [] lpszTemporary;
+
+	return bResult;
+
+} // End of function TreeViewWindowGetItemPath
+
+BOOL TreeViewWindowGetItemText( HTREEITEM htiRequired, LPTSTR lpszItemText )
+{
+	BOOL bResult = FALSE;
+
+	TVITEM tvi;
+
+	// Clear tree view item structure
+	ZeroMemory( &tvi, sizeof( tvi ) );
+
+	// Initialise tree view item structure
+	tvi.mask		= TVIF_TEXT;
+	tvi.pszText		= lpszItemText;
+	tvi.cchTextMax	= STRING_LENGTH;
+	tvi.hItem		= htiRequired;
+
+	// Get item text
+	bResult = SendMessage( g_hWndTreeView, TVM_GETITEM, ( WPARAM )TVGN_CARET, ( LPARAM )&tvi );
+
+	return bResult;
+
+} // End of function TreeViewWindowGetItemText
 
 BOOL TreeViewWindowGetRect( LPRECT lpRect )
 {
@@ -86,6 +184,62 @@ BOOL TreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpDoubleCl
 	// Select tree view window notification code
 	switch( lpNmHdr->code )
 	{
+		case NM_DBLCLK:
+		{
+			// A double click notification code
+			HTREEITEM htiSelected;
+
+			// Allocate string memory
+			LPTSTR lpszItemPath = new char[ STRING_LENGTH ];
+
+			// Get selected item
+			htiSelected = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CARET, ( LPARAM )NULL );
+
+			// Get item path
+			if( TreeViewWindowGetItemPath( htiSelected, lpszItemPath ) )
+			{
+				// Successfully got item path
+
+				// Call double click function
+				( *lpDoubleClickFunction )( lpszItemPath );
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully got item path
+
+			// Break out of switch
+			break;
+
+		} // End of a double click notification code
+		case TVN_SELCHANGED:
+		{
+			// A tree view window selection changed notification code
+			LPNMTREEVIEW lpNmTreeView;
+
+			// Allocate string memory
+			LPTSTR lpszItemPath = new char[ STRING_LENGTH ];
+
+			// Get tree view notify message handler
+			lpNmTreeView = ( LPNMTREEVIEW )lParam;
+
+			// Get item path
+			if( TreeViewWindowGetItemPath( lpNmTreeView->itemNew.hItem, lpszItemPath ) )
+			{
+				// Successfully got item path
+
+				// Call selection changed function
+				( *lpSelectionChangedFunction )( lpszItemPath );
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully got item path
+
+			// Break out of switch
+			break;
+
+		} // End of a tree view window selection changed notification code
 		default:
 		{
 			// Default tree view window notification code
