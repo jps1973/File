@@ -101,6 +101,72 @@ BOOL TreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpDoubleCl
 
 } // End of function TreeViewWindowHandleNotifyMessage
 
+BOOL TreeViewWindowLoad( LPCTSTR lpszFileName )
+{
+	BOOL bResult = FALSE;
+
+	HANDLE hFile;
+
+	// Open file
+	hFile = CreateFile( lpszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+
+	// Ensure that file was opened
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully opened file
+		DWORD dwFileSize;
+
+		// Get file size
+		dwFileSize = GetFileSize( hFile, NULL );
+
+		// Ensure that file size was got
+		if( dwFileSize != INVALID_FILE_SIZE )
+		{
+			// Successfully got file size
+
+			// Allocate string memory
+			LPTSTR lpszFileText = new char[ dwFileSize + sizeof( char ) ];
+
+			// Read file text
+			if( ReadFile( hFile, lpszFileText, dwFileSize, NULL, NULL ) )
+			{
+				// Successfully read file text
+				LPTSTR lpszFolder;
+
+				// Terminate file text
+				lpszFileText[ dwFileSize ] = ( char )NULL;
+
+				// Get first folder
+				lpszFolder = strtok( lpszFileText, NEW_LINE_TEXT );
+
+				// Loop through all folders
+				while( lpszFolder )
+				{
+					// Add folder to tree view window
+					TreeViewWindowAddItem( lpszFolder );
+
+					// Get next folder
+					lpszFolder = strtok( NULL, NEW_LINE_TEXT );
+
+				} // End of loop through all folders
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully read file text
+
+		} // End of successfully got file size
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully opened file
+
+	return bResult;
+
+} // End of function TreeViewWindowLoad
+
+
 BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
 {
 	// Move tree view window

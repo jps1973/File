@@ -451,7 +451,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			UpdateWindow( hWndMain );
 
 			// Add items to tree view window
-			TreeViewWindowAddItem( "C:\\Users\\jimps\\Box\\Documents\\Code\\File" );
+			TreeViewWindowLoad( FOLDERS_FILE_NAME );
 
 			// Message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )

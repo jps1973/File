@@ -29,6 +29,8 @@ BOOL TreeViewWindowGetRect( LPRECT lpRect );
 
 BOOL TreeViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, void( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), void( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ) );
 
+BOOL TreeViewWindowLoad( LPCTSTR lpszFileName );
+
 BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 
 HWND TreeViewWindowSetFocus();
