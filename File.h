@@ -10,6 +10,7 @@
 #include "Common.h"
 
 #include "StatusBarWindow.h"
+#include "TreeViewWindow.h"
 
 #define MAIN_WINDOW_CLASS_NAME													"Main File Window Class"
 

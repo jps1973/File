@@ -2,6 +2,20 @@
 
 #include "File.h"
 
+void TreeViewWindowDoubleClickFunction( LPCTSTR lpszItemText )
+{
+	// Display item text
+	MessageBox( NULL, lpszItemText, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+
+} // End of function TreeViewWindowDoubleClickFunction
+
+void TreeViewWindowSelectionChangedFunction( LPCTSTR lpszItemText )
+{
+	// Show item text on status bar window
+	StatusBarWindowSetText( lpszItemText );
+
+} // End of function TreeViewWindowSelectionChangedFunction
+
 int ShowAboutMessage( HWND hWndParent )
 {
 	int nResult = 0;
@@ -43,19 +57,29 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			// Get instance
 			hInstance = ( ( LPCREATESTRUCT )lParam )->hInstance;
 
-			// Create status bar window
-			if( StatusBarWindowCreate( hWndMain, hInstance ) )
+			// Create tree view window
+			if( TreeViewWindowCreate( hWndMain, hInstance ) )
 			{
-				// Successfully created status bar window
+				// Successfully created tree view window
 				HFONT hFont;
 
 				// Get font
 				hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
-				// Set status bar window font
-				StatusBarWindowSetFont( hFont );
+				// Set tree view window font
+				TreeViewWindowSetFont( hFont );
 
-			} // End of successfully created status bar window
+				// Create status bar window
+				if( StatusBarWindowCreate( hWndMain, hInstance ) )
+				{
+					// Successfully created status bar window
+
+					// Set status bar window font
+					StatusBarWindowSetFont( hFont );
+
+				} // End of successfully created status bar window
+
+			} // End of successfully created tree view window
 
 			// Break out of switch
 			break;
@@ -66,6 +90,9 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			// A size message
 			int nClientWidth;
 			int nClientHeight;
+			RECT rcStatus;
+			int nStatusWindowHeight;
+			int nTreeViewWindowHeight;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -73,6 +100,17 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 
 			// Size status bar window
 			StatusBarWindowSize();
+
+			// Get status window size
+			StatusBarWindowGetRect( &rcStatus );
+
+			// Calculate window sizes
+			nStatusWindowHeight		= ( rcStatus.bottom - rcStatus.top );
+			nTreeViewWindowHeight	= ( nClientHeight - nStatusWindowHeight );
+
+			// Move tree view window
+			TreeViewWindowMove( 0, 0, nClientWidth, nTreeViewWindowHeight, TRUE );
+
 
 			// Break out of switch
 			break;
@@ -233,10 +271,30 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 			// Get notify message handler
 			lpNmHdr = ( LPNMHDR )lParam;
 
-			// Source window is lpNmHdr->hwndFrom
+			// See if notify message is from tree view window
+			if( IsTreeViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from tree view window
 
-			// Call default procedure
-			lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+				// Handle notify message from tree view window
+				if( !( TreeViewWindowHandleNotifyMessage( wParam, lParam, &TreeViewWindowDoubleClickFunction, &TreeViewWindowSelectionChangedFunction ) ) )
+				{
+					// Notify message was not handled from tree view window
+
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+				} // End of notify message was not handled from tree view window
+
+			} // End of notify message is from tree view window
+			else
+			{
+				// Notify message is not from tree view window
+
+				// Call default procedure
+				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+			} // End of notify message is not from tree view window
 
 			// Break out of switch
 			break;
@@ -391,6 +449,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Update main window
 			UpdateWindow( hWndMain );
+
+			// Add items to tree view window
+			TreeViewWindowAddItem( "C:\\Users\\jimps\\Box\\Documents\\Code\\File" );
 
 			// Message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
