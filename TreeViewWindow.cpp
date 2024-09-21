@@ -47,6 +47,51 @@ HTREEITEM TreeViewWindowAddItem( LPCTSTR lpszItemText, HTREEITEM htiParent, HTRE
 
 } // End of function TreeViewWindowAddItem
 
+BOOL TreeViewWindowAddSubFolders( HTREEITEM htiParent )
+{
+	BOOL bResult = FALSE;
+
+	// Allocate string memory
+	LPTSTR lpszParentFolderPath = new char[ STRING_LENGTH ];
+
+	// Get parent folder path
+	if( TreeViewWindowGetItemPath( htiParent, lpszParentFolderPath ) )
+	{
+		// Successfully got parent folder path
+
+		// Allocate string memory
+		LPTSTR lpszFullSearchPattern = new char[ STRING_LENGTH ];
+
+		// Ensure that parent folder path ends with a back-slash
+		if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+		{
+			// Parent folder path does not end with a back-slash
+
+			// Append a back-slash onto parent folder path
+			lstrcat( lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
+
+		} // End of parent folder path does not end with a back-slash
+
+		// Copy parent folder path into full search pattern
+		lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
+
+		// Append all files filter onto parent folder path
+		lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
+
+		MessageBox( 0, lpszFullSearchPattern, "", MB_OK );
+
+		// Free string memory
+		delete [] lpszFullSearchPattern;
+
+	} // End of successfully got parent folder path
+
+	// Free string memory
+	delete [] lpszParentFolderPath;
+
+	return bResult;
+
+} // End of function TreeViewWindowAddSubFolders
+
 BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 {
 	BOOL bResult = FALSE;
@@ -67,6 +112,45 @@ BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 	return bResult;
 
 } // End of function TreeViewWindowCreate
+
+BOOL TreeViewWindowDeleteAllChildItems( HTREEITEM htiParent )
+{
+	BOOL bResult = TRUE; // Assume success
+
+	HTREEITEM htiChild;
+
+	// Get first child-item
+	htiChild = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )htiParent );
+
+	// Loop through all child-items
+	while( htiChild )
+	{
+		// Delete child item
+		if( SendMessage( g_hWndTreeView, TVM_DELETEITEM, ( WPARAM )NULL, ( LPARAM )htiChild ) )
+		{
+			// Successfully deleted child item
+
+			// Get next child-item
+			htiChild = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )htiParent );
+
+		} // End of successfully deleted child item
+		else
+		{
+			// Unable to delete child item
+
+			// Update return value
+			bResult = FALSE;
+
+			// Force exit from loop
+			htiChild = NULL;
+
+		} // End of unable to delete child item
+
+	}; // End of loop through all child-items
+
+	return bResult;
+
+} // End of function TreeViewWindowDeleteAllChildItems
 
 BOOL TreeViewWindowGetItemPath( HTREEITEM htiRequired, LPTSTR lpszItemPath )
 {
@@ -212,6 +296,35 @@ BOOL TreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpDoubleCl
 			break;
 
 		} // End of a double click notification code
+		case TVN_ITEMEXPANDING:
+		{
+			// A tree view window item expanding notification code
+			LPNMTREEVIEW lpNmTreeView;
+
+			// Get tree view notify message handler
+			lpNmTreeView = ( LPNMTREEVIEW )lParam;
+
+			// Delete child items
+			if( TreeViewWindowDeleteAllChildItems( lpNmTreeView->itemNew.hItem ) )
+			{
+				// Successfully deleted child items
+
+				// Add sub-folders
+				if( TreeViewWindowAddSubFolders( lpNmTreeView->itemNew.hItem ) )
+				{
+					// Successfully added sub-folders
+
+					// Update return value
+					bResult = TRUE;
+
+				} // End of successfully added sub-folders
+
+			} // End of successfully deleted child items
+
+			// Break out of switch
+			break;
+
+		} // End of a tree view window item expanding notification code
 		case TVN_SELCHANGED:
 		{
 			// A tree view window selection changed notification code
