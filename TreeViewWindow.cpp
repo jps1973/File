@@ -47,9 +47,9 @@ HTREEITEM TreeViewWindowAddItem( LPCTSTR lpszItemText, HTREEITEM htiParent, HTRE
 
 } // End of function TreeViewWindowAddItem
 
-BOOL TreeViewWindowAddSubFolders( HTREEITEM htiParent )
+int TreeViewWindowAddSubFolders( HTREEITEM htiParent )
 {
-	BOOL bResult = FALSE;
+	int nResult = 0;
 
 	// Allocate string memory
 	LPTSTR lpszParentFolderPath = new char[ STRING_LENGTH ];
@@ -58,6 +58,17 @@ BOOL TreeViewWindowAddSubFolders( HTREEITEM htiParent )
 	if( TreeViewWindowGetItemPath( htiParent, lpszParentFolderPath ) )
 	{
 		// Successfully got parent folder path
+		WIN32_FIND_DATA wfd;
+		HANDLE hFind;
+		TVINSERTSTRUCT tvis;
+		HTREEITEM htiFolder;
+
+		// Clear tree view insert structure
+		ZeroMemory( &tvis, sizeof( tvis ) );
+
+		// Initialise tree view insert structure
+		tvis.hInsertAfter	= TVI_SORT;
+		tvis.item.mask		= TVIF_TEXT;
 
 		// Allocate string memory
 		LPTSTR lpszFullSearchPattern = new char[ STRING_LENGTH ];
@@ -78,7 +89,60 @@ BOOL TreeViewWindowAddSubFolders( HTREEITEM htiParent )
 		// Append all files filter onto parent folder path
 		lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
 
-		MessageBox( 0, lpszFullSearchPattern, "", MB_OK );
+		// Find first item
+		hFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+		// Ensure that first item was found
+		if( hFind != INVALID_HANDLE_VALUE ) 
+		{
+			// Successfully found first item
+
+			// Loop through all items
+			do
+			{
+				// See if found item is a folder
+				if( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+				{
+					// Found item is a folder
+
+					// Ensure that found item is not dots
+					if( wfd.cFileName[ 0 ] != ASCII_FULL_STOP_CHARACTER )
+					{
+						// Found item is not dots
+
+						// Update tree view insert structure for found folder
+						tvis.hParent		= htiParent;
+						tvis.item.pszText	= wfd.cFileName;
+
+						// Insert folder
+						htiFolder = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
+
+						// Ensure that folder was inserted
+						if( htiFolder )
+						{
+							// Successfully inserted folder
+
+							// Update  tree view insert structure for dummy sub-item
+							tvis.hParent = htiFolder;
+
+							// Insert  dummy sub-item
+							SendMessage( g_hWndTreeView, TVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&tvis );
+
+							// Update return value
+							nResult ++;
+
+						} // End of successfully inserted folder
+
+					} // End of found item is not dots
+
+				} // End of found item is a folder
+
+			} while( FindNextFile( hFind, &wfd ) != 0 ); // End of loop through all items
+
+			// Close file find
+			FindClose( hFind );
+
+		}  // End of successfully found first item
 
 		// Free string memory
 		delete [] lpszFullSearchPattern;
@@ -88,7 +152,7 @@ BOOL TreeViewWindowAddSubFolders( HTREEITEM htiParent )
 	// Free string memory
 	delete [] lpszParentFolderPath;
 
-	return bResult;
+	return nResult;
 
 } // End of function TreeViewWindowAddSubFolders
 

@@ -23,7 +23,7 @@ BOOL IsTreeViewWindow( HWND hWnd );
 
 HTREEITEM TreeViewWindowAddItem( LPCTSTR lpszItemText, HTREEITEM htiParent = TVI_ROOT, HTREEITEM htiInsertAfter = TVI_SORT );
 
-BOOL TreeViewWindowAddSubFolders( HTREEITEM htiParent );
+int TreeViewWindowAddSubFolders( HTREEITEM htiParent );
 
 BOOL TreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
