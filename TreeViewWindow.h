@@ -41,6 +41,8 @@ BOOL TreeViewWindowLoad( LPCTSTR lpszFileName );
 
 BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 
+BOOL TreeViewWindowSave( LPCTSTR lpszFileName );
+
 HWND TreeViewWindowSetFocus();
 
 void TreeViewWindowSetFont( HFONT hFont );

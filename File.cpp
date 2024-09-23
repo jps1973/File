@@ -319,6 +319,9 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 		{
 			// A close message
 
+			// Save top level folders
+			TreeViewWindowSave( FOLDERS_FILE_NAME );
+
 			// Destroy main window
 			DestroyWindow( hWndMain );
 

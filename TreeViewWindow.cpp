@@ -505,6 +505,88 @@ BOOL TreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint 
 
 } // End of function TreeViewWindowMove
 
+BOOL TreeViewWindowSave( LPCTSTR lpszFileName )
+{
+	BOOL bResult = FALSE;
+
+	HANDLE hFile;
+
+	// Create file
+	hFile = CreateFile( lpszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	// Ensure that file was created
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully created file
+		TVITEM tvi;
+
+		// Allocate string memory
+		LPTSTR lpszTopLevelFolderPath = new char[ STRING_LENGTH ];
+
+		// Clear tree view item structure
+		ZeroMemory( &tvi, sizeof( tvi ) );
+
+		// Initialise tree view item structure
+		tvi.mask		= TVIF_TEXT;
+		tvi.pszText		= lpszTopLevelFolderPath;
+		tvi.cchTextMax	= STRING_LENGTH;
+
+		// Get first top-level folder item
+		tvi.hItem = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_ROOT, ( LPARAM )NULL );
+
+		// Loop through all top-level folder items
+		while( tvi.hItem )
+		{
+			// Get top-level folder path
+			if( SendMessage( g_hWndTreeView, TVM_GETITEM, ( WPARAM )TVGN_CARET, ( LPARAM )&tvi ) )
+			{
+				// Successfully got top-level folder path
+
+				// Write top-level folder path to file
+				if( WriteFile( hFile, lpszTopLevelFolderPath, lstrlen( lpszTopLevelFolderPath ), NULL, NULL ) )
+				{
+					// Successfully wrote top-level folder path to file
+
+					// Write new line text to file
+					WriteFile( hFile, NEW_LINE_TEXT, lstrlen( NEW_LINE_TEXT ), NULL, NULL );
+
+					// Get next top-level folder item
+					tvi.hItem = ( HTREEITEM )SendMessage( g_hWndTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_NEXT, ( LPARAM )tvi.hItem );
+
+				} // End of successfully wrote top-level folder path to file
+				else
+				{
+					// Unable to write top-level folder path to file
+
+					// Force exit from loop
+					tvi.hItem = NULL;
+
+				} // End of unable to write top-level folder path to file
+
+			} // End of successfully got top-level folder path
+			else
+			{
+				// Unable to get top-level folder path
+
+				// Force exit from loop
+				tvi.hItem = NULL;
+
+			} // End of unable to get top-level folder path
+
+		}; // End of loop through all top-level folder items
+
+		// Free string memory
+		delete [] lpszTopLevelFolderPath;
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully created file
+
+	return bResult;
+
+} // End of function TreeViewWindowSave
+
 HWND TreeViewWindowSetFocus()
 {
 	// Focus on tree view window
