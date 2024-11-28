@@ -16,9 +16,13 @@
 
 #define FOLDER_TREE_VIEW_WINDOW_DUMMY_ITEM_TEXT									"[dummy]"
 
+#define FOLDER_TREE_VIEW_WINDOW_UNABLE_TO_SAVE_FOLDERS_WARNING_MESSAGE			"Unable to save folders.\r\n\r\nDo you want to close?"
+
 BOOL IsFolderTreeViewWindow( HWND hWnd );
 
 BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
+
+BOOL FolderTreeViewWindowGetItemText( HTREEITEM htiCurrent, LPTSTR lpszItemText, DWORD dwMaximumTextLength = STRING_LENGTH );
 
 BOOL FolderTreeViewWindowGetRect( LPRECT lpRect );
 
@@ -29,6 +33,8 @@ HTREEITEM FolderTreeViewWindowInsertItem( LPCTSTR lpszItemText, HTREEITEM htiPar
 int FolderTreeViewWindowLoad( LPCTSTR lpszFileName, HTREEITEM htiParent = TVI_ROOT, HTREEITEM htiInsertAfter = TVI_SORT );
 
 BOOL FolderTreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
+
+int FolderTreeViewWindowSave( LPCTSTR lpszFileName, HTREEITEM htiParent = TVI_ROOT );
 
 HWND FolderTreeViewWindowSetFocus();
 

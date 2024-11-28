@@ -32,6 +32,28 @@ BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 } // End of function FolderTreeViewWindowCreate
 
+BOOL FolderTreeViewWindowGetItemText( HTREEITEM htiCurrent, LPTSTR lpszItemText, DWORD dwMaximumTextLength )
+{
+	BOOL bResult;
+
+	TVITEM tvi;
+
+	// Clear tree view item structure
+	ZeroMemory( &tvi, sizeof( tvi ) );
+
+	// Initialise tree view item structure
+	tvi.mask		= TVIF_TEXT;
+	tvi.pszText		= lpszItemText;
+	tvi.cchTextMax	= dwMaximumTextLength;
+	tvi.hItem		= htiCurrent;
+
+	// Get item text
+	bResult = SendMessage( g_hWndFolderTreeView, TVM_GETITEM, ( WPARAM )NULL, ( LPARAM )&tvi );
+
+	return bResult;
+
+} // End of function FolderTreeViewWindowGetItemText
+
 BOOL FolderTreeViewWindowGetRect( LPRECT lpRect )
 {
 	// Get folder tree view window rect
@@ -178,6 +200,113 @@ BOOL FolderTreeViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRe
 	return MoveWindow( g_hWndFolderTreeView, nX, nY, nWidth, nHeight, bRepaint );
 
 } // End of function FolderTreeViewWindowMove
+
+int FolderTreeViewWindowSave( LPCTSTR lpszFileName, HTREEITEM htiParent )
+{
+	int nResult = 0;
+
+	HANDLE hFile;
+
+	// Create file
+	hFile = CreateFile( lpszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+
+	// Ensure that file was created
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully created file
+		HTREEITEM htiCurrent;
+		DWORD dwItemTextLength;
+		DWORD dwNewLineTextLength;
+
+		// Allocate string memory
+		LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Store text lengths
+		dwNewLineTextLength = lstrlen( NEW_LINE_TEXT );
+
+		// Get first child item
+		htiCurrent = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )htiParent );
+		
+		// Loop through all child items
+		while( htiCurrent )
+		{
+			// Get item text
+			if( FolderTreeViewWindowGetItemText( htiCurrent, lpszItemText ) )
+			{
+				// Successfully got item text
+
+				// Get item text length
+				dwItemTextLength = lstrlen( lpszItemText );
+
+				// Write item text to file
+				if( WriteFile( hFile, lpszItemText, dwItemTextLength, NULL, NULL ) )
+				{
+					// Successfully wrote item text to file
+
+					// Write new line text to file
+					WriteFile( hFile, NEW_LINE_TEXT, dwNewLineTextLength, NULL, NULL );
+
+					// Update return value
+					nResult ++;
+
+				} // End of successfully wrote item text to file
+				else
+				{
+					// Unable to write item text to file
+
+					// Force exit from loop
+					htiCurrent = NULL;
+
+				} // End of unable to write item text to file
+
+				// Get next child item
+				htiCurrent = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_NEXT, ( LPARAM )htiCurrent );
+
+			} // End of successfully got item text
+			else
+			{
+				// Unable to get item text
+
+				// Force exit from loop
+				htiCurrent = NULL;
+
+			} // End of unable to get item text
+
+		}; // End of loop through all child items
+
+		// Free string memory
+		delete [] lpszItemText;
+
+		/*
+		DWORD dwTextLength;
+		dwTextLength = GetWindowTextLength(hEdit);
+		// No need to bother if there's no text.
+		if(dwTextLength > 0)
+		{
+		LPSTR pszText;
+		DWORD dwBufferSize = dwTextLength + 1;
+		pszText = GlobalAlloc(GPTR, dwBufferSize);
+		if(pszText != NULL)
+		{
+		if(GetWindowText(hEdit, pszText, dwBufferSize))
+		{
+		DWORD dwWritten;
+		if(WriteFile(hFile, pszText, dwTextLength, &dwWritten, NULL))
+		bSuccess = TRUE;
+		}
+		GlobalFree(pszText);
+		}
+		}
+		*/
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully created file
+
+	return nResult;
+
+} // End of function FolderTreeViewWindowSave
 
 HWND FolderTreeViewWindowSetFocus()
 {

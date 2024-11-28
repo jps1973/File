@@ -262,8 +262,30 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		{
 			// A close message
 
-			// Destroy main window
-			DestroyWindow( hWndMain );
+			// Save folder tree window
+			if( FolderTreeViewWindowSave( FOLDERS_FILE_NAME ) )
+			{
+				// Successfully saved folder tree window
+
+				// Destroy main window
+				DestroyWindow( hWndMain );
+
+			} // End of successfully saved folder tree window
+			else
+			{
+				// Unable to save folder tree window
+				
+				// Ensure that user is ok to continue
+				if( MessageBox( hWndMain, FOLDER_TREE_VIEW_WINDOW_UNABLE_TO_SAVE_FOLDERS_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 ) ) == IDYES )
+				{
+					// User is ok to continue
+
+					// Destroy main window
+					DestroyWindow( hWndMain );
+
+				} // End of user is ok to continue
+
+			} // End of unable to save folder tree window
 
 			// Break out of switch
 			break;
