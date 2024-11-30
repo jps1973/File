@@ -118,6 +118,9 @@ int FolderTreeViewWindowAddSubFolders( HTREEITEM htiParent )
 
 		} // End of successfully found first item
 
+		// Free string memory
+		delete lpszFullSearchPattern;
+
 	} // End of successfully got parent folder path
 	
 	// Free string memory

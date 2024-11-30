@@ -11,6 +11,7 @@
 #include "Common.h"
 #include "Resource.h"
 
+#include "FileListViewWindow.h"
 #include "FolderTreeViewWindow.h"
 #include "StatusBarWindow.h"
 
@@ -29,6 +30,8 @@
 
 #define MAIN_WINDOW_MINIMUM_WIDTH												320
 #define MAIN_WINDOW_MINIMUM_HEIGHT												200
+
+#define FOLDER_TREE_VIEW_WINDOW_WIDTH											400
 
 #define SYSTEM_MENU_SEPARATOR_ITEM_POSITION										5
 #define SYSTEM_MENU_ABOUT_ITEM_POSITION											6

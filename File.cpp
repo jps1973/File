@@ -11,8 +11,22 @@ void FolderTreeViewWindowDoubleClickFunction( LPCTSTR lpszItemText )
 
 void FolderTreeViewWindowSelectionChangedFunction( LPCTSTR lpszItemText )
 {
-	// Show item text on status bar window
-	StatusBarWindowSetText( lpszItemText );
+	int nFileCount;
+
+	// Allocate string memory
+	LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Populate file list view window
+	nFileCount = FileListViewWindowPopulate( lpszItemText );
+
+	// Format status message
+	wsprintf( lpszStatusMessage, "%s (%d items)", lpszItemText, nFileCount );
+
+	// Show status message on status bar window
+	StatusBarWindowSetText( lpszStatusMessage );
+
+	// Free string memory
+	delete [] lpszStatusMessage;
 
 } // End of function FolderTreeViewWindowSelectionChangedFunction
 
@@ -68,15 +82,25 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				// Set folder tree view window font
 				FolderTreeViewWindowSetFont( hFont );
 
-				// Create status bar window
-				if( StatusBarWindowCreate( hWndMain, hInstance ) )
+				// Create file list view window
+				if( FileListViewWindowCreate( hWndMain, hInstance ) )
 				{
-					// Successfully created status bar window
+					// Successfully created file list view window
 
-					// Set status bar window font
-					StatusBarWindowSetFont( hFont );
+					// Set file list view window font
+					FileListViewWindowSetFont( hFont );
 
-				} // End of successfully created status bar window
+					// Create status bar window
+					if( StatusBarWindowCreate( hWndMain, hInstance ) )
+					{
+						// Successfully created status bar window
+
+						// Set status bar window font
+						StatusBarWindowSetFont( hFont );
+
+					} // End of successfully created status bar window
+
+				} // End of successfully created file list view window
 
 			} // End of successfully created folder tree view window
 
@@ -92,6 +116,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			RECT rcStatusBar;
 			int nStatusBarWindowHeight;
 			int nFolderTreeViewWindowHeight;
+			int nFileListViewWindowWidth;
+			int nFileListViewWindowLeft;
 
 			// Get client size
 			nClientWidth	= LOWORD( lParam );
@@ -104,11 +130,16 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			StatusBarWindowGetRect( &rcStatusBar );
 
 			// Calculate window sizes
-			nStatusBarWindowHeight	= ( rcStatusBar.bottom - rcStatusBar.top );
+			nStatusBarWindowHeight		= ( rcStatusBar.bottom - rcStatusBar.top );
 			nFolderTreeViewWindowHeight	= ( nClientHeight - nStatusBarWindowHeight );
+			nFileListViewWindowWidth	= ( nClientWidth - ( FOLDER_TREE_VIEW_WINDOW_WIDTH + WINDOW_BORDER_WIDTH ) );
+
+			// Calculate window positions
+			nFileListViewWindowLeft		= ( FOLDER_TREE_VIEW_WINDOW_WIDTH - WINDOW_BORDER_WIDTH );
 
 			// Move control windows
-			FolderTreeViewWindowMove( 0, 0, nClientWidth, nFolderTreeViewWindowHeight, TRUE );
+			FolderTreeViewWindowMove( 0, 0, FOLDER_TREE_VIEW_WINDOW_WIDTH, nFolderTreeViewWindowHeight, TRUE );
+			FileListViewWindowMove( nFileListViewWindowLeft, 0, nFileListViewWindowWidth, nFolderTreeViewWindowHeight, TRUE );
 
 			// Break out of switch
 			break;
