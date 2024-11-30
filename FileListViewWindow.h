@@ -20,6 +20,8 @@
 
 #define FILE_LIST_VIEW_WINDOW_ITEM_TEXT_IN_INVERTED_COMMAS_FORMAT_STRING		"\"%s\""
 
+#define FILE_LIST_VIEW_WINDOW_MODIFIED_TEXT_FORMAT_STRING						"%04d/%02d/%02d %02d:%02d:%02d"
+
 #define FILE_LIST_VIEW_WINDOW_UNABLE_TO_SAVE_FILE_WARNING_MESSAGE_FORMAT_STRING	"Unable to save file.\r\n\r\nDo you want to close?"
 
 #define FILE_LIST_VIEW_WINDOW_COLUMN_TITLES										{ "Name", "Modified" }

@@ -72,6 +72,16 @@ int CALLBACK FileListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM l
 	// Compare item texts
 	nResult = lstrcmpi( lpszItemText1, lpszItemText2 );
 
+	// See if this is the modified column
+	if( lParamSort == FILE_LIST_VIEW_WINDOW_MODIFIED_COLUMN_ID )
+	{
+		// This is the modified column
+
+		// Invert result (to show most recent first)
+		nResult = ( 0 - nResult );
+
+	} // End of this is the modified column
+
 	// Free string memory
 	delete [] lpszItemText1;
 	delete [] lpszItemText2;
@@ -392,7 +402,7 @@ int FileListViewWindowPopulate( LPCTSTR lpszFolderPath )
 					FileTimeToSystemTime( ( &( wfd.ftLastWriteTime ) ), &stModified );
 
 					// Format modified text
-					wsprintf( lpszModified, "%04d/%02d/%02d %02d:%02d:%02d", stModified.wYear, stModified.wMonth, stModified.wDay, stModified.wHour, stModified.wMinute, stModified.wSecond );
+					wsprintf( lpszModified, FILE_LIST_VIEW_WINDOW_MODIFIED_TEXT_FORMAT_STRING, stModified.wYear, stModified.wMonth, stModified.wDay, stModified.wHour, stModified.wMinute, stModified.wSecond );
 
 					// Update list view item structure for modified text
 					lvItem.iItem		= nWhichItem;

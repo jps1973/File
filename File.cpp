@@ -2,6 +2,36 @@
 
 #include "File.h"
 
+void FileListViewWindowDoubleClickFunction( LPCTSTR lpszItemText )
+{
+	// Open double-clicked item
+	if( ( ( INT_PTR )ShellExecute( NULL, SHELL_EXECUTE_OPEN_COMMAND, lpszItemText, NULL, NULL, SW_SHOWNORMAL ) ) <= SHELL_EXECUTE_MINIMUM_SUCCESS_RETURN_VALUE )
+	{
+		// Unable to open double-clicked item
+
+		// Allocate string memory
+		LPTSTR lpszErrorMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Format error message
+		wsprintf( lpszErrorMessage, UNABLE_TO_OPEN_FILE_ERROR_MESSAGE_FORMAT_STRING, lpszItemText );
+
+		// Show error message
+		MessageBox( NULL, lpszErrorMessage, ERROR_MESSAGE_CAPTION, ( MB_OK | MB_ICONERROR ) );
+
+		// Free string memory
+		delete [] lpszErrorMessage;
+
+	} // End of unable to open double-clicked item
+
+} // End of function FileListViewWindowDoubleClickFunction
+
+void FileListViewWindowSelectionChangedFunction( LPCTSTR lpszItemText )
+{
+	// Show item text on status bar window
+	StatusBarWindowSetText( lpszItemText );
+
+} // End of function FileListViewWindowSelectionChangedFunction
+
 void FolderTreeViewWindowDoubleClickFunction( LPCTSTR lpszItemText )
 {
 	// Display item text
@@ -276,14 +306,29 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				} // End of notify message was not handled from folder tree view window
 
 			} // End of notify message is from folder tree view window
+			else if( IsFileListViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from file list view window
+
+				// Handle notify message from file list view window
+				if( !( FileListViewWindowHandleNotifyMessage( wParam, lParam, &FileListViewWindowSelectionChangedFunction, &FileListViewWindowDoubleClickFunction ) ) )
+				{
+					// Notify message was not handled from file list view window
+
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+				} // End of notify message was not handled from file list view window
+
+			} // End of notify message is from file list view window
 			else
 			{
-				// Notify message is not from folder tree view window
+				// Notify message is not from control window
 
 				// Call default procedure
 				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
-			} // End of notify message is not from folder tree view window
+			} // End of notify message is not from control window
 
 			// Break out of switch
 			break;
