@@ -32,6 +32,84 @@ BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 } // End of function FolderTreeViewWindowCreate
 
+BOOL FolderTreeViewWindowGetItemPath( HTREEITEM htiCurrent, LPTSTR lpszItemPath, DWORD dwMaximumTextLength )
+{
+	BOOL bResult = TRUE; // Assume success
+
+	TVITEM tvi;
+
+	// Allocate string memory
+	LPTSTR lpszTemporary = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Clear temporary string
+	lpszTemporary[ 0 ] = ( char )NULL;
+
+	// Clear tree view item structure
+	ZeroMemory( &tvi, sizeof( tvi ) );
+
+	// Initialise tree view item structure
+	tvi.mask		= TVIF_TEXT;
+	tvi.pszText		= lpszItemPath;
+	tvi.cchTextMax	= dwMaximumTextLength;
+	tvi.hItem		= htiCurrent;
+	
+	// Loop through all items
+	while( tvi.hItem )
+	{
+		// Get item text into path
+		if( SendMessage( g_hWndFolderTreeView, TVM_GETITEM, ( WPARAM )NULL, ( LPARAM )&tvi ) )
+		{
+			// Successfully got item text into path
+
+			// See if temporary string contains text
+			if( lpszTemporary[ 0 ] )
+			{
+				// Temporary string contains text
+
+				// Ensure that item path ends with a back-slash
+				if( lpszItemPath[ lstrlen( lpszItemPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+				{
+					// Item path does not end with a back-slash
+
+					// Append a back-slash onto item path
+					lstrcat( lpszItemPath, ASCII_BACK_SLASH_STRING );
+
+				} // End of item path does not end with a back-slash
+
+				// Append temporary string onto item path
+				lstrcat( lpszItemPath, lpszTemporary );
+
+			} // End of temporary string contains text
+
+			// Copy item path into temporary string
+			lstrcpy( lpszTemporary, lpszItemPath );
+
+			// Get parent tree view item
+			tvi.hItem = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_PARENT, ( LPARAM )tvi.hItem );
+
+		} // End of successfully got item text into path with a back-slash
+
+		else
+		{
+			// Unable to get item text into path
+
+			// Update return value
+			bResult = FALSE;
+
+			// Force exit from loop
+			tvi.hItem = NULL;
+
+		} // End of unable to get item text into path
+
+	} // End of loop through all items
+
+	// Free string memory
+	delete [] lpszTemporary;
+
+	return bResult;
+
+} // End of function FolderTreeViewWindowGetItemPath
+
 BOOL FolderTreeViewWindowGetItemText( HTREEITEM htiCurrent, LPTSTR lpszItemText, DWORD dwMaximumTextLength )
 {
 	BOOL bResult;
@@ -78,23 +156,23 @@ BOOL FolderTreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSe
 			// A column click notify message
 
 			// Allocate string memory
-			LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+			LPTSTR lpszItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
 
-			// Get item text
-			if( FolderTreeViewWindowGetItemText( lpNmTreeView->itemNew.hItem, lpszItemText ) )
+			// Get item path
+			if( FolderTreeViewWindowGetItemPath( lpNmTreeView->itemNew.hItem, lpszItemPath ) )
 			{
-				// Successfully got item text
+				// Successfully got item path
 
 				// Call selection changed function
-				( *lpSelectionChangedFunction )( lpszItemText );
+				( *lpSelectionChangedFunction )( lpszItemPath );
 
 				// Update return value
 				bResult = TRUE;
 
-			} // End of successfully got item text
+			} // End of successfully got item path
 
 			// Free string memory
-			delete [] lpszItemText;
+			delete [] lpszItemPath;
 
 			// Break out of switch
 			break;
@@ -114,23 +192,23 @@ BOOL FolderTreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSe
 				// Successfully got selected tree item
 
 				// Allocate string memory
-				LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+				LPTSTR lpszItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
 
-				// Get item text
-				if( FolderTreeViewWindowGetItemText( htiSelected, lpszItemText ) )
+				// Get item path
+				if( FolderTreeViewWindowGetItemPath( htiSelected, lpszItemPath ) )
 				{
-					// Successfully got item text
+					// Successfully got item path
 
 					// Call double click function
-					( *lpDoubleClickFunction )( lpszItemText );
+					( *lpDoubleClickFunction )( lpszItemPath );
 
 					// Update return value
 					bResult = TRUE;
 
-				} // End of successfully got item text
+				} // End of successfully got item path
 
 				// Free string memory
-				delete [] lpszItemText;
+				delete [] lpszItemPath;
 
 			} // End of successfully got selected tree item
 

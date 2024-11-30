@@ -22,6 +22,8 @@ BOOL IsFolderTreeViewWindow( HWND hWnd );
 
 BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
+BOOL FolderTreeViewWindowGetItemPath( HTREEITEM htiCurrent, LPTSTR lpszItemPath, DWORD dwMaximumTextLength = STRING_LENGTH );
+
 BOOL FolderTreeViewWindowGetItemText( HTREEITEM htiCurrent, LPTSTR lpszItemText, DWORD dwMaximumTextLength = STRING_LENGTH );
 
 BOOL FolderTreeViewWindowGetRect( LPRECT lpRect );
