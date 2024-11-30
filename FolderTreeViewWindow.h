@@ -11,7 +11,7 @@
 #define FOLDER_TREE_VIEW_WINDOW_CLASS_NAME										WC_TREEVIEW
 
 #define FOLDER_TREE_VIEW_WINDOW_EXTENDED_STYLE									0
-#define FOLDER_TREE_VIEW_WINDOW_STYLE											( WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT )
+#define FOLDER_TREE_VIEW_WINDOW_STYLE											( WS_CHILD | WS_VISIBLE | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS )
 #define FOLDER_TREE_VIEW_WINDOW_TEXT											NULL
 
 #define FOLDER_TREE_VIEW_WINDOW_DUMMY_ITEM_TEXT									"[dummy]"
@@ -20,7 +20,11 @@
 
 BOOL IsFolderTreeViewWindow( HWND hWnd );
 
+int FolderTreeViewWindowAddSubFolders( HTREEITEM htiParent );
+
 BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
+
+int FolderTreeViewWindowDeleteAllSubItems( HTREEITEM htiParent );
 
 BOOL FolderTreeViewWindowGetItemPath( HTREEITEM htiCurrent, LPTSTR lpszItemPath, DWORD dwMaximumTextLength = STRING_LENGTH );
 

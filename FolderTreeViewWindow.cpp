@@ -12,6 +12,121 @@ BOOL IsFolderTreeViewWindow( HWND hWnd )
 
 } // End of function IsFolderTreeViewWindow
 
+int FolderTreeViewWindowAddSubFolders( HTREEITEM htiParent )
+{
+	int nResult = 0;
+
+	// Allocate string memory
+	LPTSTR lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Get parent folder path
+	if( FolderTreeViewWindowGetItemPath( htiParent, lpszParentFolderPath ) )
+	{
+		// Successfully got parent folder path
+		WIN32_FIND_DATA wfd;
+		HANDLE hFileFind;
+
+		// Allocate string memory
+		LPTSTR lpszFullSearchPattern = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Ensure that parent folder path ends with a back-slash
+		if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+		{
+			// Parent folder path does not end with a back-slash
+
+			// Append a back-slash onto parent folder path
+			lstrcat( lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
+
+		} // End of parent folder path does not end with a back-slash
+
+		// Copy parent folder path into full search pattern
+		lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
+
+		// Append all files filter onto full search pattern
+		lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
+
+		// Find first item
+		hFileFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+		// Ensure that first item was found
+		if( hFileFind != INVALID_HANDLE_VALUE )
+		{
+			// Successfully found first item
+			HTREEITEM htiFolder;
+			TVINSERTSTRUCT tvis;
+
+			// Allocate string memory
+			LPTSTR lpszFolderName = new char[ STRING_LENGTH + sizeof( char ) ];
+
+			// Clear tree view insert structure
+			ZeroMemory( &tvis, sizeof( tvis ) );
+
+			// Initialise tree view insert structure
+			tvis.item.mask		= TVIF_TEXT;
+			tvis.item.pszText	= lpszFolderName;
+			tvis.hParent		= htiParent;
+			tvis.hInsertAfter	= TVI_SORT;
+
+			// Loop through all items
+			do
+			{
+				// See if item is a folder
+				if( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+				{
+					// Item is a folder
+
+					// Ensure that item is not dots
+					if( wfd.cFileName[ 0 ] != ASCII_FULL_STOP_CHARACTER )
+					{
+						// Item is not dots
+
+						// Update tree view insert structure for folder
+						tvis.hParent = htiParent;
+
+						// Update folder name for item
+						lstrcpy( lpszFolderName, wfd.cFileName );
+
+						// Insert folder
+						htiFolder = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_INSERTITEM, ( WPARAM )NULL, ( LPARAM )&tvis );
+
+						// Ensure that folder was inserted
+						if( htiFolder )
+						{
+							// Successfully inserted folder
+
+							// Update tree view insert structure for dummy sub-item
+							tvis.hParent = htiFolder;
+							// Note that dummy sub-item will never be seen (it is only there to allow the parent
+							// item to expand) so we won't update the name
+
+							// Insert dummy sub-item
+							SendMessage( g_hWndFolderTreeView, TVM_INSERTITEM, ( WPARAM )NULL, ( LPARAM )&tvis );
+
+						} // End of successfully inserted folder
+
+					} // End of item is not dots
+
+				} // End of item is a folder
+
+			}while( FindNextFile( hFileFind, &wfd ) != 0 );
+
+			// Close file find
+			FindClose( hFileFind );
+
+			// Free string memory
+			delete lpszFolderName;
+
+		} // End of successfully found first item
+
+	} // End of successfully got parent folder path
+	
+	// Free string memory
+	delete [] lpszParentFolderPath;
+
+	return nResult;
+
+} // End of function FolderTreeViewWindowAddSubFolders
+
 BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 {
 	BOOL bResult = FALSE;
@@ -31,6 +146,41 @@ BOOL FolderTreeViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 	return bResult;
 
 } // End of function FolderTreeViewWindowCreate
+
+int FolderTreeViewWindowDeleteAllSubItems( HTREEITEM htiParent )
+{
+	int nResult = 0;
+
+	HTREEITEM htiChild;
+
+	// Loop through child items
+	do
+	{
+		// Get next child item
+		htiChild = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CHILD, ( LPARAM )htiParent );
+
+		// Ensure that next child item was got
+		if( htiChild )
+		{
+			// Successfully got next child item
+
+			// Delete child item
+			if( SendMessage( g_hWndFolderTreeView, TVM_DELETEITEM, ( WPARAM )NULL, ( LPARAM )htiChild ) )
+			{
+				// Successfully deleted child item
+
+				// Update return value
+				nResult ++;
+
+			} // End of successfully deleted child item
+
+		} // End of successfully got next child item
+
+	} while( htiChild ); // End of loop through child items
+
+	return nResult;
+
+} // End of function FolderTreeViewWindowDeleteAllSubItems
 
 BOOL FolderTreeViewWindowGetItemPath( HTREEITEM htiCurrent, LPTSTR lpszItemPath, DWORD dwMaximumTextLength )
 {
@@ -145,12 +295,49 @@ BOOL FolderTreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSe
 
 	LPNMTREEVIEW lpNmTreeView;
 
-	// Get list view notify message information
+	// Get tree view notify message information
 	lpNmTreeView = ( LPNMTREEVIEW )lParam;
 
-	// Select list view window notification code
+	// Select tree view window notification code
 	switch( lpNmTreeView->hdr.code )
 	{
+		case TVN_ITEMEXPANDING:
+		{
+			// An item expanding notify message
+
+			// See if item is expanding (rather than collapsing)
+			if( lpNmTreeView->action == TVE_EXPAND )
+			{
+				// Item is expanding (rather than collapsing)
+
+				// Allocate string memory
+				LPTSTR lpszItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get item path
+				if( FolderTreeViewWindowGetItemPath( lpNmTreeView->itemNew.hItem, lpszItemPath ) )
+				{
+					// Successfully got item path
+
+					// Delete all sub items from folder tree window
+					FolderTreeViewWindowDeleteAllSubItems( lpNmTreeView->itemNew.hItem );
+
+					// Add sub-folders to folder tree window
+					FolderTreeViewWindowAddSubFolders( lpNmTreeView->itemNew.hItem );
+
+					// Update return value
+					bResult = TRUE;
+
+				} // End of successfully got item path
+
+				// Free string memory
+				delete [] lpszItemPath;
+
+			} // End of item is expanding (rather than collapsing)
+
+			// Break out of switch
+			break;
+
+		} // End of an item expanding notify message
 		case TVN_SELCHANGED:
 		{
 			// A column click notify message
@@ -216,6 +403,28 @@ BOOL FolderTreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSe
 			break;
 
 		} // End of a double click notification code
+		case NM_RCLICK:
+		{
+			// A right click message
+			HTREEITEM htiHighlighted;
+
+			// Get highlighted tree item
+			htiHighlighted = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_DROPHILITE, ( LPARAM )0 );
+
+			// Ensure that highlighted tree item was got
+			if( htiHighlighted )
+			{
+				// Successfully got highlighted tree item
+
+				// Select highlighted tree item
+				SendMessage( g_hWndFolderTreeView, TVM_SELECTITEM, ( WPARAM )TVGN_CARET, ( LPARAM )htiHighlighted );
+
+			} // End of successfully got highlighted tree item
+
+			// Break out of switch
+			break;
+
+		} // End of a right click message
 		default:
 		{
 			// Default notification code
@@ -424,28 +633,6 @@ int FolderTreeViewWindowSave( LPCTSTR lpszFileName, HTREEITEM htiParent )
 
 		// Free string memory
 		delete [] lpszItemText;
-
-		/*
-		DWORD dwTextLength;
-		dwTextLength = GetWindowTextLength(hEdit);
-		// No need to bother if there's no text.
-		if(dwTextLength > 0)
-		{
-		LPSTR pszText;
-		DWORD dwBufferSize = dwTextLength + 1;
-		pszText = GlobalAlloc(GPTR, dwBufferSize);
-		if(pszText != NULL)
-		{
-		if(GetWindowText(hEdit, pszText, dwBufferSize))
-		{
-		DWORD dwWritten;
-		if(WriteFile(hFile, pszText, dwTextLength, &dwWritten, NULL))
-		bSuccess = TRUE;
-		}
-		GlobalFree(pszText);
-		}
-		}
-		*/
 
 		// Close file
 		CloseHandle( hFile );
