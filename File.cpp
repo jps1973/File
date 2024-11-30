@@ -171,30 +171,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				{
 					// Default command
 
-					// See if command is from folder tree view window
-					if( IsFolderTreeViewWindow( ( HWND )lParam ) )
-					{
-						// Command is from folder tree view window
-
-						// Handle command from folder tree view window
-						if( !( FolderTreeViewWindowHandleCommandMessage( wParam, lParam, &FolderTreeViewWindowDoubleClickFunction, &FolderTreeViewWindowSelectionChangedFunction ) ) )
-						{
-							// Command was not handled from folder tree view window
-
-							// Call default procedure
-							lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
-
-						} // End of command was not handled from folder tree view window
-
-					} // End of command is from folder tree view window
-					else
-					{
-						// Command is not from folder tree view window
-
-						// Call default procedure
-						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
-
-					} // End of command is not from folder tree view window
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
 
 					// Break out of switch
 					break;
@@ -243,6 +221,43 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			break;
 
 		} // End of a system command message
+		case WM_NOTIFY:
+		{
+			// A notify message
+			LPNMHDR lpNmHdr;
+
+			// Get notify message information
+			lpNmHdr = ( LPNMHDR )lParam;
+
+			// See if notify message is from folder tree view window
+			if( IsFolderTreeViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from folder tree view window
+
+				// Handle notify message from folder tree view window
+				if( !( FolderTreeViewWindowHandleNotifyMessage( wParam, lParam, &FolderTreeViewWindowSelectionChangedFunction, &FolderTreeViewWindowDoubleClickFunction ) ) )
+				{
+					// Notify message was not handled from folder tree view window
+
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+				} // End of notify message was not handled from folder tree view window
+
+			} // End of notify message is from folder tree view window
+			else
+			{
+				// Notify message is not from folder tree view window
+
+				// Call default procedure
+				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+			} // End of notify message is not from folder tree view window
+
+			// Break out of switch
+			break;
+
+		} // End of a notify message
 		case WM_CONTEXTMENU:
 		{
 			// A context menu message

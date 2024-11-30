@@ -61,13 +61,83 @@ BOOL FolderTreeViewWindowGetRect( LPRECT lpRect )
 
 } // End of function FolderTreeViewWindowGetRect
 
-BOOL FolderTreeViewWindowHandleCommandMessage( WPARAM wParam, LPARAM, void( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), void( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ) )
+BOOL FolderTreeViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ), void( *lpDoubleClickFunction )( LPCTSTR lpszItemText ) )
 {
 	BOOL bResult = FALSE;
 
-	// Select folder tree view window notification code
-	switch( HIWORD( wParam ) )
+	LPNMTREEVIEW lpNmTreeView;
+
+	// Get list view notify message information
+	lpNmTreeView = ( LPNMTREEVIEW )lParam;
+
+	// Select list view window notification code
+	switch( lpNmTreeView->hdr.code )
 	{
+		case TVN_SELCHANGED:
+		{
+			// A column click notify message
+
+			// Allocate string memory
+			LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+			// Get item text
+			if( FolderTreeViewWindowGetItemText( lpNmTreeView->itemNew.hItem, lpszItemText ) )
+			{
+				// Successfully got item text
+
+				// Call selection changed function
+				( *lpSelectionChangedFunction )( lpszItemText );
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully got item text
+
+			// Free string memory
+			delete [] lpszItemText;
+
+			// Break out of switch
+			break;
+
+		} // End of a column click notify message
+		case NM_DBLCLK:
+		{
+			// A double click notification code
+			HTREEITEM htiSelected;
+
+			// Get selected tree item
+			htiSelected = ( HTREEITEM )SendMessage( g_hWndFolderTreeView, TVM_GETNEXTITEM, ( WPARAM )TVGN_CARET, ( LPARAM )NULL );
+
+			// Ensure that selected tree item was got
+			if( htiSelected )
+			{
+				// Successfully got selected tree item
+
+				// Allocate string memory
+				LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get item text
+				if( FolderTreeViewWindowGetItemText( htiSelected, lpszItemText ) )
+				{
+					// Successfully got item text
+
+					// Call double click function
+					( *lpDoubleClickFunction )( lpszItemText );
+
+					// Update return value
+					bResult = TRUE;
+
+				} // End of successfully got item text
+
+				// Free string memory
+				delete [] lpszItemText;
+
+			} // End of successfully got selected tree item
+
+			// Break out of switch
+			break;
+
+		} // End of a double click notification code
 		default:
 		{
 			// Default notification code
@@ -79,11 +149,11 @@ BOOL FolderTreeViewWindowHandleCommandMessage( WPARAM wParam, LPARAM, void( *lpD
 
 		} // End of default notification code
 
-	}; // End of selection for folder tree view window notification code
+	}; // End of selection for list view window notification code
 
 	return bResult;
 
-} // End of function FolderTreeViewWindowHandleCommandMessage
+} // End of function FolderTreeViewWindowHandleNotifyMessage
 
 HTREEITEM FolderTreeViewWindowInsertItem( LPCTSTR lpszItemText, HTREEITEM htiParent, HTREEITEM htiInsertAfter )
 {
