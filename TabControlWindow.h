@@ -26,7 +26,7 @@ typedef struct
 	TCITEMHEADER tcItemHeader;
 
 	HWND hWndControl;
-	char cData[ STRING_LENGTH + sizeof( char ) ];
+	char cParentFolderPath[ STRING_LENGTH + sizeof( char ) ];
 
 } TAB_CONTROL_WINDOW_DATA;
 
@@ -34,7 +34,7 @@ BOOL IsTabControlWindow( HWND hWnd );
 
 int TabControlWindowAddTab( HINSTANCE hInstance );
 
-int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName );
+int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath );
 
 int TabControlWindowCountTabs();
 

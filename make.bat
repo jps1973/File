@@ -6,7 +6,7 @@ windres Resource.rc -o Resource.o
 
 g++ -mwindows -m64 -static -Wall -Wextra ^
  ^
- Tab.cpp ^
+ File.cpp ^
  ^
  ControlWindow.cpp ^
  StatusBarWindow.cpp ^
@@ -14,4 +14,4 @@ g++ -mwindows -m64 -static -Wall -Wextra ^
  ^
  Resource.o ^
  ^
- -o Tab.exe
+ -o File.exe

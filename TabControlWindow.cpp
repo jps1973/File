@@ -55,7 +55,7 @@ int TabControlWindowAddTab( HINSTANCE hInstance )
 
 } // End of function TabControlWindowAddTab
 
-int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
+int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 {
 	int nResult = -1;
 
@@ -71,6 +71,46 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
 		TAB_CONTROL_WINDOW_DATA tcwData;
 		int nTabCount;
 		HFONT hFont;
+		LPTSTR lpszLastBackSlash;
+
+		// Allocate string memory
+		LPTSTR lpszTemporary	= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszTabName		= new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Copy parent folder path into temporary
+		lstrcpy( lpszTemporary, lpszParentFolderPath );
+
+		// Remove back-slash characters from end of temporary string
+		while( lpszTemporary[ lstrlen( lpszTemporary ) - sizeof( char ) ] == ASCII_BACK_SLASH_CHARACTER )
+		{
+			// Remove back-slash character from end of temporary string
+			lpszTemporary[ lstrlen( lpszTemporary ) - sizeof( char ) ] = ( char )NULL;
+
+		}; // End of loop to remove back-slash characters from end of temporary string
+
+		// Find last back-slash in temporary string
+		lpszLastBackSlash = strrchr( lpszTemporary, ASCII_BACK_SLASH_CHARACTER );
+
+		// Ensure that last back slash was found in temporary string
+		if( lpszLastBackSlash )
+		{
+			// Successfully found last back-slash in temporary string
+
+			// Copy text after last back-slash into tab name
+			lstrcpy( lpszTabName, ( lpszLastBackSlash + sizeof( char ) ) );
+
+		} // End of successfully found last back-slash in temporary string
+		else
+		{
+			// Unable to find last back-slash in temporary string
+
+			// Assume this is a drive
+			wsprintf( lpszTabName, "%C Drive", lpszTemporary[ 0 ] );
+
+		} // End of unable to find last back-slash in temporary string
+
+		// Append back-slash onto temporary string
+		lstrcat( lpszTemporary, ASCII_BACK_SLASH_STRING );
 
 		// Clear tab control window data structure
 		ZeroMemory( &tcwData, sizeof( tcwData ) );
@@ -79,8 +119,8 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
 		tcwData.tcItemHeader.mask		= ( TCIF_TEXT | TCIF_PARAM );
 		tcwData.hWndControl				= hWndControl;
 		tcwData.tcItemHeader.cchTextMax	= STRING_LENGTH;
-		tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszTabName;
-		wsprintf( tcwData.cData, "Data for tab %s.", lpszTabName );
+		tcwData.tcItemHeader.pszText	= lpszTabName;
+		lstrcpy( tcwData.cParentFolderPath, lpszTemporary );
 
 		// Get font
 		hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
@@ -89,13 +129,17 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
 		SendMessage( hWndControl, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
 		// Add text to control window
-		SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszTabName );
+		SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszParentFolderPath );
 
 		// Count tabs
 		nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 		// Add tab
 		nResult = SendMessage( g_hWndTabControl, TCM_INSERTITEM, ( WPARAM )nTabCount, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) );
+
+		// Free string memory
+		delete [] lpszTabName;
+		delete [] lpszTemporary;
 
 	} // End of successfully created control window
 
@@ -486,7 +530,7 @@ BOOL TabControlWindowOnTabSelected( int nWhichItem, BOOL( *lpStatusFunction )( L
 		ShowWindow( g_hWndActiveControl, SW_SHOW );
 
 		// Show item text on status bar window
-		( *lpStatusFunction )( tcwData.cData );
+		( *lpStatusFunction )( tcwData.cParentFolderPath );
 
 		// Update return value
 		bResult = TRUE;
@@ -524,9 +568,7 @@ int TabControlWindowSave( LPCTSTR lpszFileName )
 		ZeroMemory( &tcwData, sizeof( tcwData ) );
 
 		// Initialise tab control window data structure
-		tcwData.tcItemHeader.mask		= TCIF_TEXT;
-		tcwData.tcItemHeader.cchTextMax	= STRING_LENGTH;
-		tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszTabName;
+		tcwData.tcItemHeader.mask = TCIF_PARAM;
 
 		// Count tabs
 		nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
@@ -540,7 +582,7 @@ int TabControlWindowSave( LPCTSTR lpszFileName )
 				// Successfully got tab control item
 
 				// Write tab name to file
-				if( WriteFile( hFile, lpszTabName, lstrlen( lpszTabName ), NULL, NULL ) )
+				if( WriteFile( hFile, tcwData.cParentFolderPath, lstrlen( tcwData.cParentFolderPath ), NULL, NULL ) )
 				{
 					// Successfully wrote tab name to file
 

@@ -1,6 +1,6 @@
-// Tab.cpp
+// File.cpp
 
-#include "Tab.h"
+#include "File.h"
 
 int ShowAboutMessage( HWND hWndParent )
 {
