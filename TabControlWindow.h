@@ -32,9 +32,9 @@ typedef struct
 
 BOOL IsTabControlWindow( HWND hWnd );
 
-int TabControlWindowAddTab( HINSTANCE hInstance );
+int TabControlWindowAddTab( HINSTANCE hInstance, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
-int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath );
+int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
 int TabControlWindowCountTabs();
 
@@ -52,7 +52,7 @@ BOOL TabControlWindowGetTabName( int nWhichItem, LPTSTR lpszTabName );
 
 BOOL TabControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
-int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance );
+int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
 BOOL TabControlWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 

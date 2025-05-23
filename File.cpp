@@ -204,7 +204,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 					hInstance = GetModuleHandle( NULL );
 
 					// Create new tab
-					nWhichTab = TabControlWindowAddTab( hInstance );
+					nWhichTab = TabControlWindowAddTab( hInstance, &StatusBarWindowSetText );
 
 					// Ensure that tab was created
 					if( nWhichTab >= 0 )
@@ -537,7 +537,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			UpdateWindow( hWndMain );
 
 			// Load tabs
-			TabControlWindowLoad( TABS_FILE_NAME, hInstance );
+			TabControlWindowLoad( TABS_FILE_NAME, hInstance, &StatusBarWindowSetText );
 
 			// Get selected item
 			nSelectedItem = TabControlWindowGetSelectedItem();

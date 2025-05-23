@@ -72,3 +72,71 @@ BOOL ControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpSt
 	return bResult;
 
 } // End of function ControlWindowHandleNotifyMessage
+
+int ControlWindowPopulate( HWND hWndControl, LPCTSTR lpszFolderPath, LPCTSTR lpszFileFilter )
+{
+	int nResult = 0;
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFind;
+
+	// Allocate string memory
+	LPTSTR lpszParentFolderPath		= new char[ STRING_LENGTH + sizeof( char ) ];
+	LPTSTR lpszFullSearchPattern	= new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Store parent folder path
+	lstrcpy( lpszParentFolderPath, lpszFolderPath );
+
+	// Ensure that parent folder path ends with a back-slash
+	if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+	{
+		// Parent folder path does not end with a back-slash
+
+		// Append a back-slash onto parent folder path
+		lstrcat( lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
+
+	} // End of parent folder path does not end with a back-slash
+
+	// Copy parent folder path into full search pattern
+	lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
+
+	// Append file filter onto full search pattern
+	lstrcat( lpszFullSearchPattern, lpszFileFilter );
+
+	// Find first item
+	hFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+	// Ensure that first item was found
+	if( hFind != INVALID_HANDLE_VALUE )
+	{
+		// Successfully found first item
+
+		// Delete all items on control window
+		SendMessage( hWndControl, LB_RESETCONTENT, ( WPARAM )NULL, ( LPARAM )NULL );
+
+		// Loop through all items
+		do
+		{
+			// See if item is a file
+			if( !( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
+			{
+				// Item is a file
+
+				// Add file name to control window
+				SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )wfd.cFileName );
+
+				// Update return value
+				nResult ++;
+
+			} // End of item is a file
+
+		} while( FindNextFile(hFind, &wfd ) != 0 ); // End of loop through all items
+
+		// Close file find
+		FindClose( hFind );
+
+	} // End of successfully found first item
+
+	return nResult;
+
+} // End of function ControlWindowPopulate

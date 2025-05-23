@@ -14,7 +14,7 @@ BOOL IsTabControlWindow( HWND hWnd )
 
 } // End of function IsTabControlWindow
 
-int TabControlWindowAddTab( HINSTANCE hInstance )
+int TabControlWindowAddTab( HINSTANCE hInstance, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) )
 {
 	int nResult = -1;
 
@@ -36,7 +36,7 @@ int TabControlWindowAddTab( HINSTANCE hInstance )
 	}; // End of loop to ensure that tab name does not already exist
 
 	// Add tab
-	nResult = TabControlWindowAddTab( hInstance, lpszTabName );
+	nResult = TabControlWindowAddTab( hInstance, lpszTabName, lpStatusFunction );
 
 	// Ensure that tab was added
 	if( nResult >= 0 )
@@ -55,7 +55,7 @@ int TabControlWindowAddTab( HINSTANCE hInstance )
 
 } // End of function TabControlWindowAddTab
 
-int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
+int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) )
 {
 	int nResult = -1;
 
@@ -72,10 +72,12 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 		int nTabCount;
 		HFONT hFont;
 		LPTSTR lpszLastBackSlash;
+		int nFileCount;
 
 		// Allocate string memory
-		LPTSTR lpszTemporary	= new char[ STRING_LENGTH + sizeof( char ) ];
-		LPTSTR lpszTabName		= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszTemporary		= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszTabName			= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszStatusMessage	= new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Copy parent folder path into temporary
 		lstrcpy( lpszTemporary, lpszParentFolderPath );
@@ -105,7 +107,7 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 			// Unable to find last back-slash in temporary string
 
 			// Assume this is a drive
-			wsprintf( lpszTabName, "%C Drive", lpszTemporary[ 0 ] );
+			wsprintf( lpszTabName, CONTROL_WINDOW_DRIVE_FORMAT_STRING, lpszTemporary[ 0 ] );
 
 		} // End of unable to find last back-slash in temporary string
 
@@ -128,18 +130,25 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 		// Set control window font
 		SendMessage( hWndControl, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
-		// Add text to control window
-		SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszParentFolderPath );
-
 		// Count tabs
 		nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 		// Add tab
 		nResult = SendMessage( g_hWndTabControl, TCM_INSERTITEM, ( WPARAM )nTabCount, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) );
 
+		// Add text to control window
+		nFileCount = ControlWindowPopulate( hWndControl, lpszParentFolderPath, ALL_FILES_FILTER );
+
+		// Format status message
+		wsprintf( lpszStatusMessage, CONTROL_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszParentFolderPath, nFileCount );
+
+		// Show status message on status bar window
+		( *lpStatusFunction )( lpszStatusMessage );
+
 		// Free string memory
 		delete [] lpszTabName;
 		delete [] lpszTemporary;
+		delete [] lpszStatusMessage;
 
 	} // End of successfully created control window
 
@@ -362,7 +371,7 @@ BOOL TabControlWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatus
 
 } // End of function TabControlWindowHandleNotifyMessage
 
-int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance )
+int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) )
 {
 	int nResult = 0;
 
@@ -404,7 +413,7 @@ int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance )
 				while( lpszTab )
 				{
 					// Add tab
-					if( TabControlWindowAddTab( hInstance, lpszTab ) >= 0 )
+					if( TabControlWindowAddTab( hInstance, lpszTab, lpStatusFunction ) >= 0 )
 					{
 						// Successfully added tab
 
