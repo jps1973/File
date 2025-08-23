@@ -1,6 +1,17 @@
-// Template.cpp
+// File.cpp
 
-#include "Template.h"
+#include "File.h"
+
+BOOL ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
+{
+	BOOL bResult = FALSE;
+
+	// Display item text
+	MessageBox( NULL, lpszItemText, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONEXCLAMATION ) );
+
+	return bResult;
+
+} // End of function ComboBoxWindowSelectionChangeFunction
 
 int ShowAboutMessage( HWND hWndParent )
 {
@@ -46,13 +57,13 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			// Get font
 			hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
-			// Create list box window
-			if( ListBoxWindowCreate( hWndMain, hInstance ) )
+			// Create combo box window
+			if( ComboBoxWindowCreate( hWndMain, hInstance ) )
 			{
-				// Successfully created list box window
+				// Successfully created combo box window
 
-				// Set list box window font
-				ListBoxWindowSetFont( hFont );
+				// Set combo box window font
+				ComboBoxWindowSetFont( hFont );
 
 				// Create status bar window
 				if( StatusBarWindowCreate( hWndMain, hInstance ) )
@@ -64,7 +75,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 
 				} // End of successfully created status bar window
 
-			} // End of successfully created list box window
+			} // End of successfully created combo box window
 
 			// Break out of switch
 			break;
@@ -77,7 +88,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			int nClientHeight;
 			RECT rcStatus;
 			int nStatusWindowHeight;
-			int nListBoxWindowHeight;
+			int nComboBoxWindowHeight;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -91,10 +102,10 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 
 			// Calculate window sizes
 			nStatusWindowHeight		= ( rcStatus.bottom - rcStatus.top );
-			nListBoxWindowHeight	= ( nClientHeight - nStatusWindowHeight );
+			nComboBoxWindowHeight	= ( nClientHeight - nStatusWindowHeight );
 
-			// Move list box window
-			ListBoxWindowMove( 0, 0, nClientWidth, nListBoxWindowHeight, TRUE );
+			// Move combo box window
+			ComboBoxWindowMove( 0, 0, nClientWidth, nComboBoxWindowHeight, TRUE );
 
 			// Break out of switch
 			break;
@@ -104,8 +115,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 		{
 			// An activate message
 
-			// Focus on list box window
-			ListBoxWindowSetFocus();
+			// Focus on combo box window
+			ComboBoxWindowSetFocus();
 
 			// Break out of switch
 			break;
@@ -160,8 +171,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 					{
 						// Successfully got file path
 
-						// Add file path to list box window
-						ListBoxWindowAddString( lpszFilePath );
+						// Add file path to combo box window
+						ComboBoxWindowAddString( lpszFilePath );
 
 					} // End of successfully got file path
 
@@ -209,30 +220,30 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 				{
 					// Default command
 
-					// See if command message is from list box window
-					if( IsListBoxWindow( ( HWND )lParam ) )
+					// See if command message is from combo box window
+					if( IsComboBoxWindow( ( HWND )lParam ) )
 					{
-						// Command message is from list box window
+						// Command message is from combo box window
 
-						// Handle command message from list box window
-						if( !( ListBoxWindowHandleCommandMessage( wParam, lParam, &StatusBarWindowSetText ) ) )
+						// Handle command message from combo box window
+						if( !( ComboBoxWindowHandleCommandMessage( wParam, lParam, &ComboBoxWindowSelectionChangeFunction ) ) )
 						{
-							// Command message was not handled from list box window
+							// Command message was not handled from combo box window
 
 							// Call default procedure
 							lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
 
-						} // End of command message was not handled from list box window
+						} // End of command message was not handled from combo box window
 
-					} // End of command message is from list box window
+					} // End of command message is from combo box window
 					else
 					{
-						// Command message is not from list box window
+						// Command message is not from combo box window
 
 						// Call default procedure
 						lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
 
-					} // End of command message is not from list box window
+					} // End of command message is not from combo box window
 
 					// Break out of switch
 					break;
@@ -284,36 +295,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 		case WM_NOTIFY:
 		{
 			// A notify message
-			LPNMHDR lpNmHdr;
 
-			// Get notify message handler
-			lpNmHdr = ( LPNMHDR )lParam;
-
-			// See if notify message is from list box window
-			if( IsListBoxWindow( lpNmHdr->hwndFrom ) )
-			{
-				// Notify message is from list box window
-
-				// Handle notify message from list box window
-				if( !( ListBoxWindowHandleNotifyMessage( wParam, lParam, &StatusBarWindowSetText ) ) )
-				{
-					// Notify message was not handled from list box window
-
-					// Call default procedure
-					lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
-
-				} // End of notify message was not handled from list box window
-
-			} // End of notify message is from list box window
-			else
-			{
-				// Notify message is not from list box window
-
-				// Call default procedure
-				lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
-
-			} // End of notify message is not from list box window
-
+			// Call default procedure
+			lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
 
 			// Break out of switch
 			break;
@@ -339,7 +323,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			// A close message
 
 			// Save file
-			if( ListBoxWindowSave( TEMPLATE_FILE_NAME ) )
+			if( ComboBoxWindowSave( TEMPLATE_FILE_NAME ) )
 			{
 				// Successfully saved file
 
@@ -352,7 +336,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 				// Unable to save file
 
 				// Ensure that user is ok to close
-				if( MessageBox( hWndMain, LIST_BOX_WINDOW_UNABLE_TO_SAVE_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING ) ) == IDYES )
+				if( MessageBox( hWndMain, COMBO_BOX_WINDOW_UNABLE_TO_SAVE_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING ) ) == IDYES )
 				{
 					// User is ok to close
 
@@ -479,8 +463,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 					// Terminate argument
 					lpszArgument[ nSizeNeeded ] = ( char )NULL;
 
-					// Add argument to list box window
-					ListBoxWindowAddString( lpszArgument );
+					// Add argument to combo box window
+					ComboBoxWindowAddString( lpszArgument );
 
 				}; // End of loop through arguments
 
@@ -495,11 +479,33 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
-			// Populate list box window
-			nItemCount = ListBoxWindowPopulate( TEMPLATE_FILE_NAME );
+			// Populate combo box window
+			nItemCount = ComboBoxWindowPopulate( TEMPLATE_FILE_NAME );
+
+			// Ensure that combo box window contains items
+			if( ComboBoxWindowGetItemCount() == 0 )
+			{
+				// Combo box window is empty
+
+				// Allocate string memory
+				LPTSTR lpszFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get current folder path
+				GetCurrentDirectory( STRING_LENGTH, lpszFolderPath );
+
+				// Add current folder path to combo box window
+				ComboBoxWindowAddString( lpszFolderPath );
+
+				// Free string memory
+				delete [] lpszFolderPath;
+
+			} // End of combo box window is empty
+
+			// Select first item on combo box window
+			ComboBoxWindowSelectItem( 0, &ComboBoxWindowSelectionChangeFunction );
 
 			// Format status message
-			wsprintf( lpszStatusMessage, LIST_BOX_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, TEMPLATE_FILE_NAME, nItemCount );
+			wsprintf( lpszStatusMessage, COMBO_BOX_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, TEMPLATE_FILE_NAME, nItemCount );
 
 			// Show status message on status bar window
 			StatusBarWindowSetText( lpszStatusMessage );
