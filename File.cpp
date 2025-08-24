@@ -65,15 +65,25 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 				// Set combo box window font
 				ComboBoxWindowSetFont( hFont );
 
-				// Create status bar window
-				if( StatusBarWindowCreate( hWndMain, hInstance ) )
+				// Create list view window
+				if( ListViewWindowCreate( hWndMain, hInstance ) )
 				{
-					// Successfully created status bar window
+					// Successfully created list view window
 
-					// Set status bar window font
-					StatusBarWindowSetFont( hFont );
+					// Set list view window font
+					ListViewWindowSetFont( hFont );
 
-				} // End of successfully created status bar window
+					// Create status bar window
+					if( StatusBarWindowCreate( hWndMain, hInstance ) )
+					{
+						// Successfully created status bar window
+
+						// Set status bar window font
+						StatusBarWindowSetFont( hFont );
+
+					} // End of successfully created status bar window
+
+				} // End of successfully created list view window
 
 			} // End of successfully created combo box window
 
@@ -87,8 +97,11 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			int nClientWidth;
 			int nClientHeight;
 			RECT rcStatus;
+			RECT rcComboBox;
 			int nStatusWindowHeight;
 			int nComboBoxWindowHeight;
+			int nListViewWindowHeight;
+			int nListViewWindowTop;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -106,6 +119,19 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 
 			// Move combo box window
 			ComboBoxWindowMove( 0, 0, nClientWidth, nComboBoxWindowHeight, TRUE );
+
+			// Get combo cox size
+			ComboBoxWindowGetRect( &rcComboBox );
+
+			// Calculate window sizes
+			nComboBoxWindowHeight	= ( rcComboBox.bottom - rcComboBox.top );
+			nListViewWindowHeight	= ( nClientHeight - ( nStatusWindowHeight + nComboBoxWindowHeight ) + WINDOW_BORDER_HEIGHT );
+
+			// Calculate window positions
+			nListViewWindowTop		= ( nComboBoxWindowHeight - WINDOW_BORDER_HEIGHT );
+
+			// Move list view window
+			ListViewWindowMove( 0, nListViewWindowTop, nClientWidth, nListViewWindowHeight, TRUE );
 
 			// Break out of switch
 			break;

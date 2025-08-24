@@ -9,6 +9,7 @@ g++ -mwindows -m64 -static -Wall -Wextra ^
  File.cpp ^
  ^
  ComboBoxWindow.cpp ^
+ ListViewWindow.cpp ^
  StatusBarWindow.cpp ^
  ^
  Resource.o ^
