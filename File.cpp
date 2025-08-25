@@ -6,8 +6,22 @@ BOOL ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
 	BOOL bResult = FALSE;
 
-	// Display item text
-	MessageBox( NULL, lpszItemText, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONEXCLAMATION ) );
+	int nItemCount;
+
+	// Allocate string memory
+	LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Populate list view window
+	nItemCount = ListViewWindowPopulate( lpszItemText );
+
+	// Format status message
+	wsprintf( lpszStatusMessage, LIST_VIEW_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszItemText, nItemCount );
+
+	// Show status message on status bar window
+	StatusBarWindowSetText( lpszStatusMessage );
+
+	// Free string memory
+	delete [] lpszStatusMessage;
 
 	return bResult;
 
@@ -321,9 +335,35 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 		case WM_NOTIFY:
 		{
 			// A notify message
+			LPNMHDR lpNmHdr;
 
-			// Call default procedure
-			lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
+			// Get notify message handler
+			lpNmHdr = ( LPNMHDR )lParam;
+
+			// See if notify message is from list view window
+			if( IsListViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from list view window
+
+				// Handle notify message from list view window
+				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &StatusBarWindowSetText ) ) )
+				{
+					// Notify message was not handled from list view window
+
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
+
+				} // End of notify message was not handled from list view window
+
+			} // End of notify message is from list view window
+			else
+			{
+				// Notify message is not from list view window
+
+				// Call default procedure
+				lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
+
+			} // End of notify message is not from list view window
 
 			// Break out of switch
 			break;
@@ -353,6 +393,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			{
 				// Successfully saved file
 
+				// Free control window memory
+				ListViewWindowFreeMemory();
+
 				// Destroy main window
 				DestroyWindow( hWndMain );
 
@@ -365,6 +408,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 				if( MessageBox( hWndMain, COMBO_BOX_WINDOW_UNABLE_TO_SAVE_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING ) ) == IDYES )
 				{
 					// User is ok to close
+
+					// Free control window memory
+					ListViewWindowFreeMemory();
 
 					// Destroy main window
 					DestroyWindow( hWndMain );
@@ -448,9 +494,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			int nArgumentCount;
 			int nItemCount;
 
-			// Allocate string memory
-			LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
-
 			// Get system menu
 			hMenuSystem = GetSystemMenu( hWndMain, FALSE );
 
@@ -509,7 +552,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			nItemCount = ComboBoxWindowPopulate( TEMPLATE_FILE_NAME );
 
 			// Ensure that combo box window contains items
-			if( ComboBoxWindowGetItemCount() == 0 )
+			if( nItemCount == 0 )
 			{
 				// Combo box window is empty
 
@@ -530,12 +573,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Select first item on combo box window
 			ComboBoxWindowSelectItem( 0, &ComboBoxWindowSelectionChangeFunction );
 
-			// Format status message
-			wsprintf( lpszStatusMessage, COMBO_BOX_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, TEMPLATE_FILE_NAME, nItemCount );
-
-			// Show status message on status bar window
-			StatusBarWindowSetText( lpszStatusMessage );
-
 			// Message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
 			{
@@ -546,9 +583,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 				DispatchMessage( &msg );
 
 			}; // End of message loop
-
-			// Free string memory
-			delete [] lpszStatusMessage;
 
 		} // End of successfully main created window
 		else
