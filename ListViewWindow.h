@@ -8,6 +8,8 @@
 #include "Ascii.h"
 #include "Common.h"
 
+#include "ImageList.h"
+
 #define LIST_VIEW_WINDOW_CLASS_NAME												WC_LISTVIEW
 
 #define LIST_VIEW_WINDOW_EXTENDED_STYLE											LVS_EX_FULLROWSELECT

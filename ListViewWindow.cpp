@@ -176,6 +176,7 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 	{
 		// Successfully created list view window
 		int nWhichColumn;
+		HIMAGELIST hImageList;
 		LPCTSTR lpszColumnTitles [] = LIST_VIEW_WINDOW_COLUMN_TITLES;
 
 		// Allocate global memory
@@ -189,6 +190,12 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 		// Initialise global variables
 		g_nColumnCount = 0;
+
+		// Get system image list
+		hImageList = ImageListGetSystem();
+
+		// Set list view window image list
+		SendMessage( g_hWndListView, LVM_SETIMAGELIST, ( WPARAM )LVSIL_SMALL, ( LPARAM )hImageList );
 
 		// Loop through columns
 		for( nWhichColumn = 0; nWhichColumn < LIST_VIEW_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
@@ -459,16 +466,18 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 		LVITEM lvItem;
 		FILETIME ftLocal;
 		SYSTEMTIME stModified;
+		int nImageListIndex;
 
 		// Allocate string memory
-		LPTSTR lpszFolderText	= new char[ STRING_LENGTH + sizeof( char ) ];
-		LPTSTR lpszModifiedText	= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszFolderText		= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszModifiedText		= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszFoundItemPath	= new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Clear list view item structure
 		ZeroMemory( &lvItem, sizeof( lvItem ) );
 
 		// Initialise list view item structure
-		lvItem.mask			= LVIF_TEXT;
+		lvItem.mask			= ( LVIF_TEXT | LVIF_IMAGE );
 		lvItem.cchTextMax	= STRING_LENGTH;
 		lvItem.iItem		= 0;
 
@@ -494,12 +503,22 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 				{
 					// Current item is not dots
 
+					// Copy parent folder path into found item path
+					lstrcpy( lpszFoundItemPath, g_lpszParentFolderPath );
+
+					// Append found item name onto found item path
+					lstrcat( lpszFoundItemPath, wfd.cFileName );
+
+					// Get image list index
+					nImageListIndex = ImageListGetIndex( lpszFoundItemPath );
+
 					// Format folder text
 					wsprintf( lpszFolderText, LIST_VIEW_WINDOW_FOLDER_TEXT_FORMAT_STRING, LIST_VIEW_WINDOW_FOLDER_PREFIX, wfd.cFileName );
 
 					// Update list view item structure for folder
-					lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
-					lvItem.pszText		= lpszFolderText;
+					lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+					lvItem.pszText	= lpszFolderText;
+					lvItem.iImage	= nImageListIndex;
 
 					// Add folder to list view window
 					nInserted = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
@@ -513,9 +532,19 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 			{
 				// Current item is a file
 
+				// Copy parent folder path into found item path
+				lstrcpy( lpszFoundItemPath, g_lpszParentFolderPath );
+
+				// Append found item name onto found item path
+				lstrcat( lpszFoundItemPath, wfd.cFileName );
+
+				// Get image list index
+				nImageListIndex = ImageListGetIndex( lpszFoundItemPath );
+
 				// Update list view item structure for file
-				lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
-				lvItem.pszText		= wfd.cFileName;
+				lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+				lvItem.pszText	= wfd.cFileName;
+				lvItem.iImage	= nImageListIndex;
 
 				// Add file to list view window
 				nInserted = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
@@ -563,6 +592,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 		// Free string memory
 		delete [] lpszFolderText;
 		delete [] lpszModifiedText;
+		delete [] lpszFoundItemPath;
 
 	} // End of successfully found first item
 
