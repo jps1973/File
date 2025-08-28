@@ -56,7 +56,7 @@ BOOL ListViewWindowGetFilePath( int nWhichFile, LPTSTR lpszFilePath );
 
 BOOL ListViewWindowGetRect( LPRECT lpRect );
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
+BOOL ListViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ), BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ) );
 
 BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 

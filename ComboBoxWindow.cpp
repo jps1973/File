@@ -12,10 +12,41 @@ BOOL IsComboBoxWindow( HWND hWnd )
 
 } // End of function IsComboBoxWindow
 
-int ComboBoxWindowAddString( LPCTSTR lpszString )
+int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) )
 {
-	// Add string to combo box window
-	return SendMessage( g_hWndComboBox, CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszString );
+	int nResult = -1;
+
+	// Attempt to find string on combo box window
+	nResult = SendMessage( g_hWndComboBox, CB_FINDSTRINGEXACT , ( WPARAM )-1, ( LPARAM )lpszString );
+
+	// See if string already exists on combo box window
+	if( nResult < 0 )
+	{
+		// String does not already exist on combo box window
+
+		// Add string to combo box window
+		nResult = SendMessage( g_hWndComboBox, CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszString );
+
+	} // End of string does not already exist on combo box window
+
+	// Ensure that result is valid
+	if( nResult >= 0 )
+	{
+		// Result is valid
+
+		// See if string needs to be selected
+		if( lpSelectionChangeFunction )
+		{
+			// String needs to be selected
+
+			// Select string on combo box window
+			ComboBoxWindowSelectItem( nResult, lpSelectionChangeFunction );
+
+		} // End of string needs to be selected
+
+	} // End of result is valid
+
+	return nResult;
 
 } // End of function ComboBoxWindowAddString
 

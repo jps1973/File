@@ -4,7 +4,7 @@
 
 BOOL ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
-	BOOL bResult = FALSE;
+	BOOL bResult;
 
 	int nItemCount;
 
@@ -18,7 +18,7 @@ BOOL ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 	wsprintf( lpszStatusMessage, LIST_VIEW_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszItemText, nItemCount );
 
 	// Show status message on status bar window
-	StatusBarWindowSetText( lpszStatusMessage );
+	bResult = StatusBarWindowSetText( lpszStatusMessage );
 
 	// Free string memory
 	delete [] lpszStatusMessage;
@@ -26,6 +26,79 @@ BOOL ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 	return bResult;
 
 } // End of function ComboBoxWindowSelectionChangeFunction
+
+BOOL ListViewWindowDoubleClickFunction( LPCTSTR lpszItemPath )
+{
+	BOOL bResult = FALSE;
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFileFind;
+
+	// Attempt to find item
+	hFileFind = FindFirstFile( lpszItemPath, &wfd );
+
+	// Ensure that item exists
+	if( hFileFind != INVALID_HANDLE_VALUE )
+	{
+		// Item exists
+
+		// See if item is a folder
+		if( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+		{
+			// Item is a folder
+
+			// Add folder to combo box window
+			if( ComboBoxWindowAddString( lpszItemPath, &ComboBoxWindowSelectionChangeFunction ) >= 1 )
+			{
+				// Successfully added folder to combo box window
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully added folder to combo box window
+
+		} // End of item is a folder
+		else
+		{
+			// Item is a file
+
+			// Open selected item
+			if( ( INT_PTR )ShellExecute( NULL, SHELL_EXECUTE_OPEN_COMMAND, lpszItemPath, NULL, NULL, SW_SHOWDEFAULT ) > SHELL_EXECUTE_MAXIMUM_FAILURE_RETURN_VALUE )
+			{
+				// Successfully opened item
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully opened item
+			else
+			{
+				// Unable to open item
+
+				// Allocate string memory
+				LPTSTR lpszErrorMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Format error message
+				wsprintf( lpszErrorMessage, UNABLE_TO_OPEN_FILE_ERROR_MESSAGE_FORMAT_STRING, lpszItemPath );
+
+				// Display error message
+				MessageBox( NULL, lpszErrorMessage, ERROR_MESSAGE_CAPTION, ( MB_OK | MB_ICONERROR ) );
+
+				// Free string memory
+				delete [] lpszErrorMessage;
+
+			} // End of unable to open item
+
+		} // End of item is a file
+
+		// Close file find
+		FindClose( hFileFind );
+
+	} // End of item exists
+
+	return bResult;
+
+} // End of function ListViewWindowDoubleClickFunction
 
 int ShowAboutMessage( HWND hWndParent )
 {
@@ -212,7 +285,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 						// Successfully got file path
 
 						// Add file path to combo box window
-						ComboBoxWindowAddString( lpszFilePath );
+						ComboBoxWindowAddString( lpszFilePath, NULL );
 
 					} // End of successfully got file path
 
@@ -346,7 +419,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 				// Notify message is from list view window
 
 				// Handle notify message from list view window
-				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &StatusBarWindowSetText ) ) )
+				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &StatusBarWindowSetText, &ListViewWindowDoubleClickFunction ) ) )
 				{
 					// Notify message was not handled from list view window
 
@@ -533,7 +606,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 					lpszArgument[ nSizeNeeded ] = ( char )NULL;
 
 					// Add argument to combo box window
-					ComboBoxWindowAddString( lpszArgument );
+					ComboBoxWindowAddString( lpszArgument, NULL );
 
 				}; // End of loop through arguments
 
@@ -563,7 +636,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 				GetCurrentDirectory( STRING_LENGTH, lpszFolderPath );
 
 				// Add current folder path to combo box window
-				ComboBoxWindowAddString( lpszFolderPath );
+				ComboBoxWindowAddString( lpszFolderPath, NULL );
 
 				// Free string memory
 				delete [] lpszFolderPath;

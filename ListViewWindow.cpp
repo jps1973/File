@@ -288,7 +288,7 @@ BOOL ListViewWindowGetRect( LPRECT lpRect )
 
 } // End of function ListViewWindowGetRect
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
+BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ), BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ) )
 {
 	BOOL bResult = FALSE;
 
@@ -336,8 +336,8 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatusFu
 				{
 					// Successfully got file path
 
-					// Show file path on status bar window
-					bResult = ( *lpStatusFunction )( lpszFilePath );
+					// Call selection changed function
+					bResult = ( *lpSelectionChangedFunction )( lpszFilePath );
 
 				} // End of successfully got file path
 
@@ -371,6 +371,10 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatusFu
 				{
 					// Successfully got selected item path
 
+					// Call double click function
+					bResult = ( *lpDoubleClickFunction )( lpszFilePath );
+
+/*
 					// Open selected item
 					if( ( INT_PTR )ShellExecute( NULL, SHELL_EXECUTE_OPEN_COMMAND, lpszFilePath, NULL, NULL, SW_SHOWDEFAULT ) <= SHELL_EXECUTE_MINIMUM_SUCCESS_RETURN_VALUE )
 					{
@@ -389,7 +393,7 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatusFu
 						delete [] lpszErrorMessage;
 
 					} // End of unable to open item
-
+*/
 				} // End of successfully got selected item path
 
 				// Free string memory

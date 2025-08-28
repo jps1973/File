@@ -20,7 +20,7 @@
 
 BOOL IsComboBoxWindow( HWND hWnd );
 
-int ComboBoxWindowAddString( LPCTSTR lpszString );
+int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) );
 
 BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
