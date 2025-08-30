@@ -28,3 +28,11 @@
 #define ERROR_MESSAGE_CAPTION													"Error"
 #define INFORMATION_MESSAGE_CAPTION												"Information"
 #define WARNING_MESSAGE_CAPTION													"Warning"
+
+typedef enum
+{
+	SOURCE_COLUMN_ID = 0,
+
+	NUMBER_OF_COLUMNS
+
+} COLUMNS;

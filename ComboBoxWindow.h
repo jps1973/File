@@ -18,28 +18,28 @@
 
 #define COMBO_BOX_WINDOW_UNABLE_TO_SAVE_WARNING_MESSAGE							"Unable to save.\r\n\r\nDo you want to close?"
 
-BOOL IsComboBoxWindow( HWND hWnd );
+BOOL IsComboBoxWindow( int nWhichComboBoxWindow, HWND hWnd );
 
-int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) );
+int ComboBoxWindowAddString( int nWhichComboBoxWindow, LPCTSTR lpszString, BOOL( *lpSelectionChangeFunction )( int nWhichComboBoxWindow, LPCTSTR lpszItemText ) );
 
-BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance );
+BOOL ComboBoxWindowCreate( int nWhichComboBoxWindow, HWND hWndParent, HINSTANCE hInstance );
 
-int ComboBoxWindowGetItemCount();
+int ComboBoxWindowGetItemCount( int nWhichComboBoxWindow );
 
-BOOL ComboBoxWindowGetRect( LPRECT lpRect );
+BOOL ComboBoxWindowGetRect( int nWhichComboBoxWindow, LPRECT lpRect );
 
-BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) );
+BOOL ComboBoxWindowHandleCommandMessage( int nWhichComboBoxWindow, WPARAM wParam, LPARAM lParam, BOOL( *lpSelectionChangeFunction )( int nWhichComboBoxWindow, LPCTSTR lpszItemText ) );
 
-BOOL ComboBoxWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
+BOOL ComboBoxWindowMove( int nWhichComboBoxWindow, int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 
-int ComboBoxWindowLoad( LPCTSTR lpszFileName );
+int ComboBoxWindowLoad( int nWhichComboBoxWindow, LPCTSTR lpszFileName );
 
-int ComboBoxWindowPopulate( LPCTSTR lpszFileName );
+int ComboBoxWindowPopulate( int nWhichComboBoxWindow, LPCTSTR lpszFileName );
 
-int ComboBoxWindowSave( LPCTSTR lpszFileName );
+int ComboBoxWindowSave( int nWhichComboBoxWindow, LPCTSTR lpszFileName );
 
-BOOL ComboBoxWindowSelectItem( int nWhichItem, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) );
+BOOL ComboBoxWindowSelectItem( int nWhichComboBoxWindow, int nWhichItem, BOOL( *lpSelectionChangeFunction )( int nWhichComboBoxWindow, LPCTSTR lpszItemText ) );
 
-HWND ComboBoxWindowSetFocus();
+HWND ComboBoxWindowSetFocus( int nWhichComboBoxWindow );
 
-void ComboBoxWindowSetFont( HFONT hFont );
+void ComboBoxWindowSetFont( int nWhichComboBoxWindow, HFONT hFont );

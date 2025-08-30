@@ -38,30 +38,30 @@ typedef enum
 
 } LIST_VIEW_WINDOW_COLUMN_IDS;
 
-BOOL IsListViewWindow( HWND hWnd );
+BOOL IsListViewWindow( int nWhichListViewWindow, HWND hWnd );
 
-int ListViewWindowAddColumn( LPCTSTR lpszTitle, int nWidth = LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH );
+int ListViewWindowAddColumn( int nWhichListViewWindow, LPCTSTR lpszTitle, int nWidth = LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH );
 
-int ListViewWindowAddFile( LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength = STRING_LENGTH );
+int ListViewWindowAddFile( int nWhichListViewWindow, LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength = STRING_LENGTH );
 
-int ListViewWindowAutoSizeAllColumns();
+int ListViewWindowAutoSizeAllColumns( int nWhichListViewWindow );
 
-int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lParamColumn );
+int CALLBACK ListViewWindowCompare( int nWhichListViewWindow, LPARAM lParam1, LPARAM lParam2, LPARAM lParamColumn );
 
-BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance );
+BOOL ListViewWindowCreate( int nWhichListViewWindow, HWND hWndParent, HINSTANCE hInstance );
 
-void ListViewWindowFreeMemory();
+void ListViewWindowFreeMemory( int nWhichListViewWindow );
 
-BOOL ListViewWindowGetFilePath( int nWhichFile, LPTSTR lpszFilePath );
+BOOL ListViewWindowGetFilePath( int nWhichListViewWindow, int nWhichFile, LPTSTR lpszFilePath );
 
-BOOL ListViewWindowGetRect( LPRECT lpRect );
+BOOL ListViewWindowGetRect( int nWhichListViewWindow, LPRECT lpRect );
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ), BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ) );
+BOOL ListViewWindowHandleNotifyMessage( int nWhichListViewWindow, WPARAM wParam, LPARAM lParam, BOOL( *lpSelectionChangedFunction )( int nWhichListViewWindow, LPCTSTR lpszItemText ), BOOL( *lpDoubleClickFunction )( int nWhichListViewWindow, LPCTSTR lpszItemText ) );
 
-BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
+BOOL ListViewWindowMove( int nWhichListViewWindow, int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
 
-int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath );
+int ListViewWindowPopulate( int nWhichListViewWindow, LPCTSTR lpszParentFolderPath );
 
-HWND ListViewWindowSetFocus();
+HWND ListViewWindowSetFocus( int nWhichListViewWindow );
 
-void ListViewWindowSetFont( HFONT hFont );
+void ListViewWindowSetFont( int nWhichListViewWindow, HFONT hFont );

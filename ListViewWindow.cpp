@@ -3,18 +3,18 @@
 #include "ListViewWindow.h"
 
 // Global variables
-static HWND g_hWndListView;
-static int g_nColumnCount;
-static LPTSTR g_lpszParentFolderPath;
+static HWND g_hWndListView[ NUMBER_OF_COLUMNS ];
+static int g_nColumnCount[ NUMBER_OF_COLUMNS ];
+static LPTSTR g_lpszParentFolderPath[ NUMBER_OF_COLUMNS ];
 
-BOOL IsListViewWindow( HWND hWnd )
+BOOL IsListViewWindow( int nWhichListViewWindow, HWND hWnd )
 {
 	// See if supplied window is list view window
-	return( hWnd == g_hWndListView );
+	return( hWnd == g_hWndListView[ nWhichListViewWindow ] );
 
 } // End of function IsListViewWindow
 
-int ListViewWindowAddColumn( LPCTSTR lpszTitle, int nWidth )
+int ListViewWindowAddColumn( int nWhichListViewWindow, LPCTSTR lpszTitle, int nWidth )
 {
 	int nResult = -1;
 
@@ -29,7 +29,7 @@ int ListViewWindowAddColumn( LPCTSTR lpszTitle, int nWidth )
 	lvColumn.pszText	= ( LPTSTR )lpszTitle;
 
 	// Add column to list view window
-	nResult = SendMessage( g_hWndListView, LVM_INSERTCOLUMN, ( WPARAM )g_nColumnCount, (LPARAM )&lvColumn );
+	nResult = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_INSERTCOLUMN, ( WPARAM )g_nColumnCount[ nWhichListViewWindow ], (LPARAM )&lvColumn );
 
 	// Ensure that column was added to list view window
 	if( nResult >= 0 )
@@ -37,7 +37,7 @@ int ListViewWindowAddColumn( LPCTSTR lpszTitle, int nWidth )
 		// Successfully added column to list view window
 
 		// Update column count
-		g_nColumnCount ++;
+		g_nColumnCount[ nWhichListViewWindow ] ++;
 
 	} // End of successfully added column to list view window
 
@@ -45,7 +45,7 @@ int ListViewWindowAddColumn( LPCTSTR lpszTitle, int nWidth )
 
 } // End of function ListViewWindowAddColumn
 
-int ListViewWindowAddFile( LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength )
+int ListViewWindowAddFile( int nWhichListViewWindow, LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength )
 {
 	int nResult = -1;
 
@@ -53,7 +53,7 @@ int ListViewWindowAddFile( LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength )
 	int nItemCount;
 
 	// Count items on list view window
-	nItemCount = SendMessage( g_hWndListView, LVM_GETITEMCOUNT, ( WPARAM )NULL, (LPARAM )NULL );
+	nItemCount = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_GETITEMCOUNT, ( WPARAM )NULL, (LPARAM )NULL );
 
 	// Clear list view item structure
 	ZeroMemory( &lvItem, sizeof( lvItem ) );
@@ -66,7 +66,7 @@ int ListViewWindowAddFile( LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength )
 	lvItem.pszText		= ( LPTSTR )lpszFileName;
 
 	// Add file to list view window
-	nResult = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+	nResult = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
 	// Ensure that file was added to list view window
 	if( nResult >= 0 )
@@ -78,7 +78,7 @@ int ListViewWindowAddFile( LPCTSTR lpszFileName, DWORD dwMaximumFileNameLength )
 
 } // End of function ListViewWindowAddFile
 
-int ListViewWindowAutoSizeAllColumns()
+int ListViewWindowAutoSizeAllColumns( int nWhichListViewWindow )
 {
 	int nResult = 0;
 
@@ -88,7 +88,7 @@ int ListViewWindowAutoSizeAllColumns()
 	for( nWhichColumn = 0; nWhichColumn < LIST_VIEW_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
 	{
 		// Auto-size current column
-		if( SendMessage( g_hWndListView, LVM_SETCOLUMNWIDTH, ( WPARAM )nWhichColumn, ( LPARAM )LVSCW_AUTOSIZE_USEHEADER ) )
+		if( SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_SETCOLUMNWIDTH, ( WPARAM )nWhichColumn, ( LPARAM )LVSCW_AUTOSIZE_USEHEADER ) )
 		{
 			// Successfully auto-sized current column
 
@@ -103,7 +103,7 @@ int ListViewWindowAutoSizeAllColumns()
 
 } // End of function ListViewWindowAutoSizeAllColumns
 
-int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lParamColumn )
+int CALLBACK ListViewWindowCompare( int nWhichListViewWindow, LPARAM lParam1, LPARAM lParam2, LPARAM lParamColumn )
 {
 	int nResult = 0;
 
@@ -126,7 +126,7 @@ int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 	lvItem.pszText	= lpszItem1;
 
 	// Get first item text
-	if( SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )lParam1, ( LPARAM )&lvItem ) )
+	if( SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_GETITEMTEXT, ( WPARAM )lParam1, ( LPARAM )&lvItem ) )
 	{
 		// Successfully got first item text
 
@@ -135,7 +135,7 @@ int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 		lvItem.pszText	= lpszItem2;
 
 		// Get second item text
-		if( SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )lParam2, ( LPARAM )&lvItem ) )
+		if( SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_GETITEMTEXT, ( WPARAM )lParam2, ( LPARAM )&lvItem ) )
 		{
 			// Successfully got second item text
 
@@ -164,15 +164,15 @@ int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 
 } // End of function ListViewWindowCompare
 
-BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
+BOOL ListViewWindowCreate( int nWhichListViewWindow, HWND hWndParent, HINSTANCE hInstance )
 {
 	BOOL bResult = FALSE;
 
 	// Create list view window
-	g_hWndListView = CreateWindowEx( LIST_VIEW_WINDOW_EXTENDED_STYLE, LIST_VIEW_WINDOW_CLASS_NAME, LIST_VIEW_WINDOW_TEXT, LIST_VIEW_WINDOW_STYLE, 0, 0, 0, 0, hWndParent, ( HMENU )NULL, hInstance, NULL );
+	g_hWndListView[ nWhichListViewWindow ] = CreateWindowEx( LIST_VIEW_WINDOW_EXTENDED_STYLE, LIST_VIEW_WINDOW_CLASS_NAME, LIST_VIEW_WINDOW_TEXT, LIST_VIEW_WINDOW_STYLE, 0, 0, 0, 0, hWndParent, ( HMENU )NULL, hInstance, NULL );
 
 	// Ensure that list view window was created
-	if( g_hWndListView )
+	if( g_hWndListView[ nWhichListViewWindow ] )
 	{
 		// Successfully created list view window
 		int nWhichColumn;
@@ -180,33 +180,33 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 		LPCTSTR lpszColumnTitles [] = LIST_VIEW_WINDOW_COLUMN_TITLES;
 
 		// Allocate global memory
-		g_lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+		g_lpszParentFolderPath[ nWhichListViewWindow ] = new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Clear parent folder path
-		g_lpszParentFolderPath[ 0 ] = ( char )NULL;
+		g_lpszParentFolderPath[ nWhichListViewWindow ][ 0 ] = ( char )NULL;
 
 		// Set extended list view window style
-		SendMessage( g_hWndListView, LVM_SETEXTENDEDLISTVIEWSTYLE, ( WPARAM )0, ( LPARAM )LIST_VIEW_WINDOW_EXTENDED_STYLE );
+		SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_SETEXTENDEDLISTVIEWSTYLE, ( WPARAM )0, ( LPARAM )LIST_VIEW_WINDOW_EXTENDED_STYLE );
 
 		// Initialise global variables
-		g_nColumnCount = 0;
+		g_nColumnCount[ nWhichListViewWindow ] = 0;
 
 		// Get system image list
 		hImageList = ImageListGetSystem();
 
 		// Set list view window image list
-		SendMessage( g_hWndListView, LVM_SETIMAGELIST, ( WPARAM )LVSIL_SMALL, ( LPARAM )hImageList );
+		SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_SETIMAGELIST, ( WPARAM )LVSIL_SMALL, ( LPARAM )hImageList );
 
 		// Loop through columns
 		for( nWhichColumn = 0; nWhichColumn < LIST_VIEW_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
 		{
 			// Add column to list view window
-			ListViewWindowAddColumn( lpszColumnTitles[ nWhichColumn ] );
+			ListViewWindowAddColumn( nWhichListViewWindow, lpszColumnTitles[ nWhichColumn ] );
 
 		}; // End of loop through columns
 
 		// Auto-size all columns
-		ListViewWindowAutoSizeAllColumns();
+		ListViewWindowAutoSizeAllColumns( nWhichListViewWindow );
 
 		// Update return value
 		bResult = TRUE;
@@ -217,14 +217,14 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 } // End of function ListViewWindowCreate
 
-void ListViewWindowFreeMemory()
+void ListViewWindowFreeMemory( int nWhichListViewWindow )
 {
 	// Free string memory
-	delete [] g_lpszParentFolderPath;
+	delete [] g_lpszParentFolderPath[ nWhichListViewWindow ];
 
 } // End of function ListViewWindowFreeMemory
 
-BOOL ListViewWindowGetFilePath( int nWhichFile, LPTSTR lpszFilePath )
+BOOL ListViewWindowGetFilePath( int nWhichListViewWindow, int nWhichFile, LPTSTR lpszFilePath )
 {
 	BOOL bResult = FALSE;
 
@@ -244,12 +244,12 @@ BOOL ListViewWindowGetFilePath( int nWhichFile, LPTSTR lpszFilePath )
 	lvItem.iItem		= nWhichFile;
 
 	// Get file name
-	if( SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )nWhichFile, ( LPARAM )&lvItem ) )
+	if( SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_GETITEMTEXT, ( WPARAM )nWhichFile, ( LPARAM )&lvItem ) )
 	{
 		// Successfully got file name
 
 		// Copy parent folder path info file path
-		lstrcpy( lpszFilePath, g_lpszParentFolderPath );
+		lstrcpy( lpszFilePath, g_lpszParentFolderPath[ nWhichListViewWindow ] );
 
 		// See if item is a folder
 		if( lpszFileName[ 0 ] == LIST_VIEW_WINDOW_FOLDER_PREFIX )
@@ -281,14 +281,14 @@ BOOL ListViewWindowGetFilePath( int nWhichFile, LPTSTR lpszFilePath )
 
 } // End of function ListViewWindowGetFilePath
 
-BOOL ListViewWindowGetRect( LPRECT lpRect )
+BOOL ListViewWindowGetRect( int nWhichListViewWindow, LPRECT lpRect )
 {
 	// Get list view window rect
-	return GetWindowRect( g_hWndListView, lpRect );
+	return GetWindowRect( g_hWndListView[ nWhichListViewWindow ], lpRect );
 
 } // End of function ListViewWindowGetRect
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectionChangedFunction )( LPCTSTR lpszItemText ), BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ) )
+BOOL ListViewWindowHandleNotifyMessage( int nWhichListViewWindow, WPARAM, LPARAM lParam, BOOL( *lpSelectionChangedFunction )( int nWhichListViewWindow, LPCTSTR lpszItemText ), BOOL( *lpDoubleClickFunction )( int nWhichListViewWindow, LPCTSTR lpszItemText ) )
 {
 	BOOL bResult = FALSE;
 
@@ -309,7 +309,7 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectio
 			lpNmListView = ( ( LPNMLISTVIEW )lParam );
 
 			// Sort the list view
-			ListView_SortItemsEx( g_hWndListView, &ListViewWindowCompare, lpNmListView->iSubItem );
+			ListView_SortItemsEx( g_hWndListView[ nWhichListViewWindow ], &ListViewWindowCompare, lpNmListView->iSubItem );
 
 			// Break out of switch
 			break;
@@ -332,12 +332,12 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectio
 				LPTSTR lpszFilePath = new char[ STRING_LENGTH + sizeof( char ) ];
 
 				// Get file path
-				if( ListViewWindowGetFilePath( lpNmListView->iItem, lpszFilePath ) )
+				if( ListViewWindowGetFilePath( nWhichListViewWindow, lpNmListView->iItem, lpszFilePath ) )
 				{
 					// Successfully got file path
 
 					// Call selection changed function
-					bResult = ( *lpSelectionChangedFunction )( lpszFilePath );
+					bResult = ( *lpSelectionChangedFunction )( nWhichListViewWindow, lpszFilePath );
 
 				} // End of successfully got file path
 
@@ -356,7 +356,7 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectio
 			int nSelectedItem;
 
 			// Get selected item
-			nSelectedItem = SendMessage( g_hWndListView, LVM_GETNEXTITEM, ( WPARAM )-1, ( LPARAM )LVNI_FOCUSED );
+			nSelectedItem = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_GETNEXTITEM, ( WPARAM )-1, ( LPARAM )LVNI_FOCUSED );
 
 			// Ensure that selected item was got
 			if( nSelectedItem >= 0 )
@@ -367,33 +367,13 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectio
 				LPTSTR lpszFilePath = new char[ STRING_LENGTH + sizeof( char ) ];
 
 				// Get selected item path
-				if( ListViewWindowGetFilePath( nSelectedItem, lpszFilePath ) )
+				if( ListViewWindowGetFilePath( nWhichListViewWindow, nSelectedItem, lpszFilePath ) )
 				{
 					// Successfully got selected item path
 
 					// Call double click function
-					bResult = ( *lpDoubleClickFunction )( lpszFilePath );
+					bResult = ( *lpDoubleClickFunction )( nWhichListViewWindow, lpszFilePath );
 
-/*
-					// Open selected item
-					if( ( INT_PTR )ShellExecute( NULL, SHELL_EXECUTE_OPEN_COMMAND, lpszFilePath, NULL, NULL, SW_SHOWDEFAULT ) <= SHELL_EXECUTE_MINIMUM_SUCCESS_RETURN_VALUE )
-					{
-						// Unable to open item
-
-						// Allocate string memory
-						LPTSTR lpszErrorMessage = new char[ STRING_LENGTH + sizeof( char ) ];
-
-						// Format error message
-						wsprintf( lpszErrorMessage, UNABLE_TO_OPEN_FILE_ERROR_MESSAGE_FORMAT_STRING, lpszFilePath );
-
-						// Display error message
-						MessageBox( NULL, lpszErrorMessage, ERROR_MESSAGE_CAPTION, ( MB_OK | MB_ICONERROR ) );
-
-						// Free string memory
-						delete [] lpszErrorMessage;
-
-					} // End of unable to open item
-*/
 				} // End of successfully got selected item path
 
 				// Free string memory
@@ -422,14 +402,14 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpSelectio
 
 } // End of function ListViewWindowHandleNotifyMessage
 
-BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
+BOOL ListViewWindowMove( int nWhichListViewWindow, int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
 {
 	// Move list view window
-	return MoveWindow( g_hWndListView, nX, nY, nWidth, nHeight, bRepaint );
+	return MoveWindow( g_hWndListView[ nWhichListViewWindow ], nX, nY, nWidth, nHeight, bRepaint );
 
 } // End of function ListViewWindowMove
 
-int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
+int ListViewWindowPopulate( int nWhichListViewWindow, LPCTSTR lpszParentFolderPath )
 {
 	int nResult = 0;
 
@@ -486,10 +466,10 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 		lvItem.iItem		= 0;
 
 		// Clear list view window
-		SendMessage( g_hWndListView, LVM_DELETEALLITEMS, ( WPARAM )NULL, ( LPARAM )NULL );
+		SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_DELETEALLITEMS, ( WPARAM )NULL, ( LPARAM )NULL );
 
 		// Update global parent folder path
-		lstrcpy( g_lpszParentFolderPath, lpszTemporaryParentFolderPath );
+		lstrcpy( g_lpszParentFolderPath[ nWhichListViewWindow ], lpszTemporaryParentFolderPath );
 
 		// Loop through all items
 		do
@@ -508,7 +488,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 					// Current item is not dots
 
 					// Copy parent folder path into found item path
-					lstrcpy( lpszFoundItemPath, g_lpszParentFolderPath );
+					lstrcpy( lpszFoundItemPath, g_lpszParentFolderPath[ nWhichListViewWindow ] );
 
 					// Append found item name onto found item path
 					lstrcat( lpszFoundItemPath, wfd.cFileName );
@@ -525,7 +505,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 					lvItem.iImage	= nImageListIndex;
 
 					// Add folder to list view window
-					nInserted = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+					nInserted = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
 					// Add folder to list view window
 
@@ -537,7 +517,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 				// Current item is a file
 
 				// Copy parent folder path into found item path
-				lstrcpy( lpszFoundItemPath, g_lpszParentFolderPath );
+				lstrcpy( lpszFoundItemPath, g_lpszParentFolderPath[ nWhichListViewWindow ] );
 
 				// Append found item name onto found item path
 				lstrcat( lpszFoundItemPath, wfd.cFileName );
@@ -551,7 +531,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 				lvItem.iImage	= nImageListIndex;
 
 				// Add file to list view window
-				nInserted = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+				nInserted = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
 			} // End of current item is a file
 
@@ -575,7 +555,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 				lvItem.pszText		= lpszModifiedText;
 
 				// Add modified text to list view window
-				nInserted = SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+				nInserted = SendMessage( g_hWndListView[ nWhichListViewWindow ], LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
 				// Update list view item structure for next item
 				lvItem.iItem ++;
@@ -591,7 +571,7 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 		FindClose( hFileFind );
 
 		// Auto-size all list view window columns
-		ListViewWindowAutoSizeAllColumns();
+		ListViewWindowAutoSizeAllColumns( nWhichListViewWindow );
 
 		// Free string memory
 		delete [] lpszFolderText;
@@ -608,16 +588,16 @@ int ListViewWindowPopulate( LPCTSTR lpszParentFolderPath )
 
 } // End of function ListViewWindowPopulate
 
-HWND ListViewWindowSetFocus()
+HWND ListViewWindowSetFocus( int nWhichListViewWindow )
 {
 	// Focus on list view window
-	return SetFocus( g_hWndListView );
+	return SetFocus( g_hWndListView[ nWhichListViewWindow ] );
 
 } // End of function ListViewWindowSetFocus
 
-void ListViewWindowSetFont( HFONT hFont )
+void ListViewWindowSetFont( int nWhichListViewWindow, HFONT hFont )
 {
 	// Set list view window font
-	SendMessage( g_hWndListView, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+	SendMessage( g_hWndListView[ nWhichListViewWindow ], WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
 } // End of function ListViewWindowSetFont

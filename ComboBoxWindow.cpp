@@ -3,21 +3,21 @@
 #include "ComboBoxWindow.h"
 
 // Global variables
-static HWND g_hWndComboBox;
+static HWND g_hWndComboBox[ NUMBER_OF_COLUMNS ];
 
-BOOL IsComboBoxWindow( HWND hWnd )
+BOOL IsComboBoxWindow( int nWhichComboBoxWindow, HWND hWnd )
 {
 	// See if supplied window is combo box window
-	return( hWnd == g_hWndComboBox );
+	return( hWnd == g_hWndComboBox[ nWhichComboBoxWindow ] );
 
 } // End of function IsComboBoxWindow
 
-int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) )
+int ComboBoxWindowAddString( int nWhichComboBoxWindow, LPCTSTR lpszString, BOOL( *lpSelectionChangeFunction )( int nWhichComboBoxWindow, LPCTSTR lpszItemText ) )
 {
 	int nResult = -1;
 
 	// Attempt to find string on combo box window
-	nResult = SendMessage( g_hWndComboBox, CB_FINDSTRINGEXACT , ( WPARAM )-1, ( LPARAM )lpszString );
+	nResult = SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_FINDSTRINGEXACT , ( WPARAM )-1, ( LPARAM )lpszString );
 
 	// See if string already exists on combo box window
 	if( nResult < 0 )
@@ -25,7 +25,7 @@ int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunctio
 		// String does not already exist on combo box window
 
 		// Add string to combo box window
-		nResult = SendMessage( g_hWndComboBox, CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszString );
+		nResult = SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszString );
 
 	} // End of string does not already exist on combo box window
 
@@ -40,7 +40,7 @@ int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunctio
 			// String needs to be selected
 
 			// Select string on combo box window
-			ComboBoxWindowSelectItem( nResult, lpSelectionChangeFunction );
+			ComboBoxWindowSelectItem( nWhichComboBoxWindow, nResult, lpSelectionChangeFunction );
 
 		} // End of string needs to be selected
 
@@ -50,15 +50,15 @@ int ComboBoxWindowAddString( LPCTSTR lpszString, BOOL( *lpSelectionChangeFunctio
 
 } // End of function ComboBoxWindowAddString
 
-BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance )
+BOOL ComboBoxWindowCreate( int nWhichComboBoxWindow, HWND hWndParent, HINSTANCE hInstance )
 {
 	BOOL bResult = FALSE;
 
 	// Create combo box window
-	g_hWndComboBox = CreateWindowEx( COMBO_BOX_WINDOW_EXTENDED_STYLE, COMBO_BOX_WINDOW_CLASS_NAME, COMBO_BOX_WINDOW_TEXT, COMBO_BOX_WINDOW_STYLE, 0, 0, 0, 0, hWndParent, ( HMENU )NULL, hInstance, NULL );
+	g_hWndComboBox[ nWhichComboBoxWindow ] = CreateWindowEx( COMBO_BOX_WINDOW_EXTENDED_STYLE, COMBO_BOX_WINDOW_CLASS_NAME, COMBO_BOX_WINDOW_TEXT, COMBO_BOX_WINDOW_STYLE, 0, 0, 0, 0, hWndParent, ( HMENU )NULL, hInstance, NULL );
 
 	// Ensure that combo box window was created
-	if( g_hWndComboBox )
+	if( g_hWndComboBox[ nWhichComboBoxWindow ] )
 	{
 		// Successfully created combo box window
 
@@ -70,21 +70,21 @@ BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 } // End of function ComboBoxWindowCreate
 
-int ComboBoxWindowGetItemCount()
+int ComboBoxWindowGetItemCount( int nWhichComboBoxWindow )
 {
 	// Add string to combo box window
-	return SendMessage( g_hWndComboBox, CB_GETCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+	return SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_GETCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 } // End of function ComboBoxWindowGetItemCount
 
-BOOL ComboBoxWindowGetRect( LPRECT lpRect )
+BOOL ComboBoxWindowGetRect( int nWhichComboBoxWindow, LPRECT lpRect )
 {
 	// Get combo box window rect
-	return GetWindowRect( g_hWndComboBox, lpRect );
+	return GetWindowRect( g_hWndComboBox[ nWhichComboBoxWindow ], lpRect );
 
 } // End of function ComboBoxWindowGetRect
 
-BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) )
+BOOL ComboBoxWindowHandleCommandMessage( int nWhichComboBoxWindow, WPARAM wParam, LPARAM, BOOL( *lpSelectionChangeFunction )( int nWhichComboBoxWindow, LPCTSTR lpszItemText ) )
 {
 	BOOL bResult = FALSE;
 
@@ -100,15 +100,15 @@ BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM, BOOL( *lpSelecti
 			LPTSTR lpszSelected = new char[ STRING_LENGTH + sizeof( char ) ];
 
 			// Get selected item
-			nSelectedItem = SendMessage( g_hWndComboBox, CB_GETCURSEL, ( WPARAM )NULL, ( LPARAM )NULL );
+			nSelectedItem = SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_GETCURSEL, ( WPARAM )NULL, ( LPARAM )NULL );
 
 			// Get selected item text
-			if( SendMessage( g_hWndComboBox, CB_GETLBTEXT, ( WPARAM )nSelectedItem, ( LPARAM )lpszSelected ) )
+			if( SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_GETLBTEXT, ( WPARAM )nSelectedItem, ( LPARAM )lpszSelected ) )
 			{
 				// Successfully got selected item text
 
 				// Show selected item text on status bar window
-				( *lpSelectionChangeFunction )( lpszSelected );
+				( *lpSelectionChangeFunction )( nWhichComboBoxWindow, lpszSelected );
 
 			} // End of successfully got selected item text
 
@@ -136,14 +136,14 @@ BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM, BOOL( *lpSelecti
 
 } // End of function ComboBoxWindowHandleCommandMessage
 
-BOOL ComboBoxWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
+BOOL ComboBoxWindowMove( int nWhichComboBoxWindow, int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
 {
 	// Move combo box window
-	return MoveWindow( g_hWndComboBox, nX, nY, nWidth, nHeight, bRepaint );
+	return MoveWindow( g_hWndComboBox[ nWhichComboBoxWindow ], nX, nY, nWidth, nHeight, bRepaint );
 
 } // End of function ComboBoxWindowMove
 
-int ComboBoxWindowLoad( LPCTSTR lpszFileName )
+int ComboBoxWindowLoad( int nWhichComboBoxWindow, LPCTSTR lpszFileName )
 {
 	int nResult = 0;
 
@@ -185,7 +185,7 @@ int ComboBoxWindowLoad( LPCTSTR lpszFileName )
 				while( lpszLine )
 				{
 					// Add line to combo box window
-					if( SendMessage( g_hWndComboBox, CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszLine ) >= 0 )
+					if( SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszLine ) >= 0 )
 					{
 						// Successfully added line to combo box window
 
@@ -223,21 +223,21 @@ int ComboBoxWindowLoad( LPCTSTR lpszFileName )
 
 } // End of function ComboBoxWindowLoad
 
-int ComboBoxWindowPopulate( LPCTSTR lpszFileName )
+int ComboBoxWindowPopulate( int nWhichComboBoxWindow, LPCTSTR lpszFileName )
 {
 	int nResult = 0;
 
 	// Clear combo box window
-	SendMessage( g_hWndComboBox, CB_RESETCONTENT, ( WPARAM )NULL, ( LPARAM )NULL );
+	SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_RESETCONTENT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 	// Load file
-	nResult = ComboBoxWindowLoad( lpszFileName );
+	nResult = ComboBoxWindowLoad( nWhichComboBoxWindow, lpszFileName );
 
 	return nResult;
 
 } // End of function ComboBoxWindowPopulate
 
-int ComboBoxWindowSave( LPCTSTR lpszFileName )
+int ComboBoxWindowSave( int nWhichComboBoxWindow, LPCTSTR lpszFileName )
 {
 	int nResult = 0;
 
@@ -257,13 +257,13 @@ int ComboBoxWindowSave( LPCTSTR lpszFileName )
 		LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Count items on combo box window
-		nItemCount = SendMessage( g_hWndComboBox, CB_GETCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+		nItemCount = SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_GETCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 		// Loop through items on combo box window
 		for( nWhichItem = 0; nWhichItem < nItemCount; nWhichItem ++ )
 		{
 			// Get item text
-			if( SendMessage( g_hWndComboBox, CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszItemText) != CB_ERR )
+			if( SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszItemText) != CB_ERR )
 			{
 				// Successfully got item text
 
@@ -312,12 +312,12 @@ int ComboBoxWindowSave( LPCTSTR lpszFileName )
 
 } // End of function ComboBoxWindowSave
 
-BOOL ComboBoxWindowSelectItem( int nWhichItem, BOOL( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) )
+BOOL ComboBoxWindowSelectItem( int nWhichComboBoxWindow, int nWhichItem, BOOL( *lpSelectionChangeFunction )( int nWhichComboBoxWindow, LPCTSTR lpszItemText ) )
 {
 	BOOL bResult = FALSE;
 
 	// Select item
-	if( SendMessage( g_hWndComboBox, CB_SETCURSEL, ( WPARAM )nWhichItem, ( LPARAM )NULL ) != CB_ERR )
+	if( SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_SETCURSEL, ( WPARAM )nWhichItem, ( LPARAM )NULL ) != CB_ERR )
 	{
 		// Successfully selected item
 
@@ -325,12 +325,12 @@ BOOL ComboBoxWindowSelectItem( int nWhichItem, BOOL( *lpSelectionChangeFunction 
 		LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Get item text
-		if( SendMessage( g_hWndComboBox, CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszItemText) != CB_ERR )
+		if( SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszItemText) != CB_ERR )
 		{
 			// Successfully got item text
 
 			// Call selection change function
-			bResult = ( *lpSelectionChangeFunction )( lpszItemText );
+			bResult = ( *lpSelectionChangeFunction )( nWhichComboBoxWindow, lpszItemText );
 
 		} // End of successfully got item text
 
@@ -343,16 +343,16 @@ BOOL ComboBoxWindowSelectItem( int nWhichItem, BOOL( *lpSelectionChangeFunction 
 
 } // End of function ComboBoxWindowSelectItem
 
-HWND ComboBoxWindowSetFocus()
+HWND ComboBoxWindowSetFocus( int nWhichComboBoxWindow )
 {
 	// Focus on combo box window
-	return SetFocus( g_hWndComboBox );
+	return SetFocus( g_hWndComboBox[ nWhichComboBoxWindow ] );
 
 } // End of function ComboBoxWindowSetFocus
 
-void ComboBoxWindowSetFont( HFONT hFont )
+void ComboBoxWindowSetFont( int nWhichComboBoxWindow, HFONT hFont )
 {
 	// Set combo box window font
-	SendMessage( g_hWndComboBox, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+	SendMessage( g_hWndComboBox[ nWhichComboBoxWindow ], WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
 } // End of function ComboBoxWindowSetFont
