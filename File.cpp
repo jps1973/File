@@ -18,7 +18,7 @@ BOOL ComboBoxWindowSelectionChangeFunction( int nWhichColumn, LPCTSTR lpszItemTe
 	wsprintf( lpszStatusMessage, LIST_VIEW_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszItemText, nItemCount );
 
 	// Show status message on status bar window
-	bResult = StatusBarWindowSetText( lpszStatusMessage );
+	bResult = StatusBarWindowSetText( nWhichColumn, lpszStatusMessage );
 
 	// Free string memory
 	delete [] lpszStatusMessage;
@@ -26,6 +26,41 @@ BOOL ComboBoxWindowSelectionChangeFunction( int nWhichColumn, LPCTSTR lpszItemTe
 	return bResult;
 
 } // End of function ComboBoxWindowSelectionChangeFunction
+
+int ComboBoxWindowPopulate( int nWhichComboBoxWindow )
+{
+	int nResult = 0;
+
+	int nItemCount;
+
+	// Populate combo box window
+	nItemCount = ComboBoxWindowPopulate( nWhichComboBoxWindow, TEMPLATE_FILE_NAME );
+
+	// Ensure that  combo box window contains items
+	if( nItemCount == 0 )
+	{
+		// Combo box window is empty
+
+		// Allocate string memory
+		LPTSTR lpszFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Get current folder path
+		GetCurrentDirectory( STRING_LENGTH, lpszFolderPath );
+
+		// Add current folder path to combo box window
+		ComboBoxWindowAddString( nWhichComboBoxWindow, lpszFolderPath, NULL );
+
+		// Free string memory
+		delete [] lpszFolderPath;
+
+	} // End of combo box window is empty
+
+	// Select first item on combo box window
+	ComboBoxWindowSelectItem( nWhichComboBoxWindow, 0, &ComboBoxWindowSelectionChangeFunction );
+
+	return nResult;
+
+} // End of function ComboBoxWindowPopulate
 
 BOOL ListViewWindowDoubleClickFunction( int nWhichColumn, LPCTSTR lpszItemPath )
 {
@@ -102,7 +137,7 @@ BOOL ListViewWindowDoubleClickFunction( int nWhichColumn, LPCTSTR lpszItemPath )
 
 BOOL ListViewWindowSelectionChangeFunction( int nWhichColumn, LPCTSTR lpszItemPath )
 {
-	return StatusBarWindowSetText( lpszItemPath );
+	return StatusBarWindowSetText( nWhichColumn, lpszItemPath );
 
 } // End of function ListViewWindowSelectionChangeFunction
 
@@ -166,15 +201,35 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 					// Set source list view window font
 					ListViewWindowSetFont( SOURCE_COLUMN_ID, hFont );
 
-					// Create status bar window
-					if( StatusBarWindowCreate( hWndMain, hInstance ) )
+					// Create destination combo box window
+					if( ComboBoxWindowCreate( DESTINATION_COLUMN_ID, hWndMain, hInstance ) )
 					{
-						// Successfully created status bar window
+						// Successfully created destination combo box window
 
-						// Set status bar window font
-						StatusBarWindowSetFont( hFont );
+						// Set destination combo box window font
+						ComboBoxWindowSetFont( DESTINATION_COLUMN_ID, hFont );
 
-					} // End of successfully created status bar window
+						// Create destination list view window
+						if( ListViewWindowCreate( DESTINATION_COLUMN_ID, hWndMain, hInstance ) )
+						{
+							// Successfully created destination list view window
+
+							// Set destination list view window font
+							ListViewWindowSetFont( DESTINATION_COLUMN_ID, hFont );
+
+							// Create status bar window
+							if( StatusBarWindowCreate( hWndMain, hInstance ) )
+							{
+								// Successfully created status bar window
+
+								// Set status bar window font
+								StatusBarWindowSetFont( hFont );
+
+							} // End of successfully created status bar window
+
+						} // End of successfully created destination list view window
+
+					} // End of successfully created destination combo box window
 
 				} // End of successfully created source list view window
 
@@ -195,6 +250,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			int nComboBoxWindowHeight;
 			int nListViewWindowHeight;
 			int nListViewWindowTop;
+			int nSourceWidth;
+			int nDestinationWidth;
+			int nDestinationLeft;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -209,9 +267,15 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			// Calculate window sizes
 			nStatusWindowHeight		= ( rcStatus.bottom - rcStatus.top );
 			nComboBoxWindowHeight	= ( nClientHeight - nStatusWindowHeight );
+			nSourceWidth			= ( ( nClientWidth - BUTTON_WINDOW_WIDTH ) / NUMBER_OF_COLUMNS );
+			nDestinationWidth		= ( nClientWidth - ( nSourceWidth + BUTTON_WINDOW_WIDTH ) );
 
-			// Move source combo box window
-			ComboBoxWindowMove( SOURCE_COLUMN_ID, 0, 0, nClientWidth, nComboBoxWindowHeight, TRUE );
+			// Calculate window positions
+			nDestinationLeft		= ( nSourceWidth + BUTTON_WINDOW_WIDTH );
+
+			// Move combo box windows
+			ComboBoxWindowMove( SOURCE_COLUMN_ID,		0,					0,	nSourceWidth,		nComboBoxWindowHeight,	TRUE );
+			ComboBoxWindowMove( DESTINATION_COLUMN_ID,	nDestinationLeft,	0,	nDestinationWidth,	nComboBoxWindowHeight,	TRUE );
 
 			// Get source combo box window size
 			ComboBoxWindowGetRect( SOURCE_COLUMN_ID, &rcComboBox );
@@ -223,8 +287,12 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			// Calculate window positions
 			nListViewWindowTop		= ( nComboBoxWindowHeight - WINDOW_BORDER_HEIGHT );
 
-			// Move source list view window
-			ListViewWindowMove( SOURCE_COLUMN_ID, 0, nListViewWindowTop, nClientWidth, nListViewWindowHeight, TRUE );
+			// Move list view windows
+			ListViewWindowMove( SOURCE_COLUMN_ID,		0,					nListViewWindowTop,	nSourceWidth,		nListViewWindowHeight,	TRUE );
+			ListViewWindowMove( DESTINATION_COLUMN_ID,	nDestinationLeft,	nListViewWindowTop,	nDestinationLeft,	nListViewWindowHeight,	TRUE );
+
+			// Set status bar window parts
+			StatusBarWindowSetParts( nDestinationLeft );
 
 			// Break out of switch
 			break;
@@ -355,14 +423,29 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 						} // End of command message was not handled from source combo box window
 
 					} // End of command message is from source combo box window
+					else if( IsComboBoxWindow( DESTINATION_COLUMN_ID, ( HWND )lParam ) )
+					{
+						// Command message is from source combo box window
+
+						// Handle command message from source destination box window
+						if( !( ComboBoxWindowHandleCommandMessage( DESTINATION_COLUMN_ID, wParam, lParam, &ComboBoxWindowSelectionChangeFunction ) ) )
+						{
+							// Command message was not handled from destination combo box window
+
+							// Call default procedure
+							lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
+
+						} // End of command message was not handled from destination combo box window
+
+					} // End of command message is from destination combo box window
 					else
 					{
-						// Command message is not from source combo box window
+						// Command message is not from a combo box window
 
 						// Call default procedure
 						lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
 
-					} // End of command message is not from source combo box window
+					} // End of command message is not from a combo box window
 
 					// Break out of switch
 					break;
@@ -436,13 +519,29 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 
 			} // End of notify message is from source list view window
 			else
+			if( IsListViewWindow( DESTINATION_COLUMN_ID, lpNmHdr->hwndFrom ) )
 			{
-				// Notify message is not from source list view window
+				// Notify message is from destination list view window
+
+				// Handle notify message from destination list view window
+				if( !( ListViewWindowHandleNotifyMessage( DESTINATION_COLUMN_ID, wParam, lParam, &ListViewWindowSelectionChangeFunction, &ListViewWindowDoubleClickFunction ) ) )
+				{
+					// Notify message was not handled from destination list view window
+
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
+
+				} // End of notify message was not handled from destination list view window
+
+			} // End of notify message is from destination list view window
+			else
+			{
+				// Notify message is not from a list view window
 
 				// Call default procedure
 				lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
 
-			} // End of notify message is not from source list view window
+			} // End of notify message is not from a list view window
 
 			// Break out of switch
 			break;
@@ -474,6 +573,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 
 				// Free control window memory
 				ListViewWindowFreeMemory( SOURCE_COLUMN_ID );
+				ListViewWindowFreeMemory( DESTINATION_COLUMN_ID );
 
 				// Destroy main window
 				DestroyWindow( hWndMain );
@@ -490,6 +590,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 
 					// Free control window memory
 					ListViewWindowFreeMemory( SOURCE_COLUMN_ID );
+					ListViewWindowFreeMemory( DESTINATION_COLUMN_ID );
 
 					// Destroy main window
 					DestroyWindow( hWndMain );
@@ -571,7 +672,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			HMENU hMenuSystem;
 			LPWSTR *lpszArgumentList;
 			int nArgumentCount;
-			int nItemCount;
 
 			// Get system menu
 			hMenuSystem = GetSystemMenu( hWndMain, FALSE );
@@ -627,30 +727,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
-			// Populate source combo box window
-			nItemCount = ComboBoxWindowPopulate( SOURCE_COLUMN_ID, TEMPLATE_FILE_NAME );
-
-			// Ensure that source combo box window contains items
-			if( nItemCount == 0 )
-			{
-				// Combo box window is empty
-
-				// Allocate string memory
-				LPTSTR lpszFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
-
-				// Get current folder path
-				GetCurrentDirectory( STRING_LENGTH, lpszFolderPath );
-
-				// Add current folder path to source combo box window
-				ComboBoxWindowAddString( SOURCE_COLUMN_ID, lpszFolderPath, NULL );
-
-				// Free string memory
-				delete [] lpszFolderPath;
-
-			} // End of source combo box window is empty
-
-			// Select first item on source combo box window
-			ComboBoxWindowSelectItem( SOURCE_COLUMN_ID, 0, &ComboBoxWindowSelectionChangeFunction );
+			// Populate combo box windows
+			ComboBoxWindowPopulate( SOURCE_COLUMN_ID );
+			ComboBoxWindowPopulate( DESTINATION_COLUMN_ID );
 
 			// Message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )

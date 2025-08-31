@@ -28,6 +28,7 @@ BOOL StatusBarWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 		bResult = TRUE;
 
 	} // End of successfully created status bar window
+
 	return bResult;
 
 } // End of function StatusBarWindowCreate
@@ -60,10 +61,27 @@ void StatusBarWindowSetFont( HFONT hFont )
 
 } // End of function StatusBarWindowSetFont
 
-BOOL StatusBarWindowSetText( LPCTSTR lpszStatusText )
+BOOL StatusBarWindowSetParts( int nLeftWidth )
+{
+	BOOL bResult = FALSE;
+
+	int nParts[ STATUS_BAR_WINDOW_PART_COUNT ];
+
+	// Initialise parts
+	nParts[ STATUS_BAR_WINDOW_LEFT_PART_ID ]	= nLeftWidth;
+	nParts[ STATUS_BAR_WINDOW_RIGHT_PART_ID ]	= -1;
+
+	// Set status bar window parts
+	bResult = SendMessage( g_hWndStatusBar, SB_SETPARTS, ( WPARAM )STATUS_BAR_WINDOW_PART_COUNT, ( LPARAM )&nParts );
+
+	return bResult;
+
+} // End of function StatusBarWindowSetParts
+
+BOOL StatusBarWindowSetText( BYTE bWhichPart, LPCTSTR lpszStatusText )
 {
 	// Set status bar window text
-	return SendMessage( g_hWndStatusBar, SB_SETTEXT, ( WPARAM )NULL, ( LPARAM )lpszStatusText );
+	return SendMessage( g_hWndStatusBar, SB_SETTEXT, ( WPARAM )( MAKEWORD( bWhichPart, 0 ) ), ( LPARAM )lpszStatusText );
 
 } // End of function StatusBarWindowSetText
 
