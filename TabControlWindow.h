@@ -9,6 +9,7 @@
 #include "Common.h"
 
 #include "ControlWindow.h"
+#include "SelectFolder.h"
 
 #define TAB_CONTROL_WINDOW_CLASS_NAME											WC_TABCONTROL
 
@@ -26,7 +27,7 @@ typedef struct
 	TCITEMHEADER tcItemHeader;
 
 	HWND hWndControl;
-	char cData[ STRING_LENGTH + sizeof( char ) ];
+	LPTSTR lpszParentFolderPath;
 
 } TAB_CONTROL_WINDOW_DATA;
 
@@ -34,7 +35,7 @@ BOOL IsTabControlWindow( HWND hWnd );
 
 int TabControlWindowAddTab( HINSTANCE hInstance );
 
-int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName );
+int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath );
 
 int TabControlWindowCountTabs();
 
@@ -44,11 +45,17 @@ BOOL TabControlWindowDeleteTab( int nWhichTab );
 
 BOOL TabControlWindowDoesTabExist( LPCTSTR lpszRequiredTabName );
 
+BOOL TabControlWindowGetParentFolderPath( int nWhichTab, LPTSTR lpszParentFolderPath );
+
+BOOL TabControlWindowGetParentFolderPath( LPTSTR lpszParentFolderPath );
+
 BOOL TabControlWindowGetRect( LPRECT lpRect );
 
 int TabControlWindowGetSelectedItem();
 
-BOOL TabControlWindowGetTabName( int nWhichItem, LPTSTR lpszTabName );
+BOOL TabControlWindowGetTabName( int nWhichTab, LPTSTR lpszTabName );
+
+BOOL TabControlWindowGetTabName( LPTSTR lpszTabName );
 
 BOOL TabControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
@@ -58,7 +65,7 @@ BOOL TabControlWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepain
 
 BOOL TabControlWindowMoveControlWindow();
 
-BOOL TabControlWindowOnTabSelected( int nWhichItem, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
+BOOL TabControlWindowOnTabSelected( int nWhichTab, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
 int TabControlWindowSave( LPCTSTR lpszFileName );
 

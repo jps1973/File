@@ -19,43 +19,50 @@ int TabControlWindowAddTab( HINSTANCE hInstance )
 	int nResult = -1;
 
 	// Allocate string memory
-	LPTSTR lpszTabName = new char[ STRING_LENGTH + sizeof( char ) ];
+	LPTSTR lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
 
-	// Format tab name
-	wsprintf( lpszTabName, TAB_CONTROL_WINDOW_NEW_TAB_NAME_FORMAT_STRING, g_nNextTabNumber );
+	// Get selected tab name into parent folder path
+	TabControlWindowGetParentFolderPath( lpszParentFolderPath );
 
-	// Ensure that tab name does not already exist
-	while( TabControlWindowDoesTabExist( lpszTabName ) )
+	// Select a folder
+	if( SelectFolder( lpszParentFolderPath ) )
 	{
-		// Update next tab number
-		g_nNextTabNumber ++;
+		// Successfully selected a folder
 
-		// Format tab name
-		wsprintf( lpszTabName, TAB_CONTROL_WINDOW_NEW_TAB_NAME_FORMAT_STRING, g_nNextTabNumber );
+		// Ensure that tab name does not already exist
+		while( TabControlWindowDoesTabExist( lpszParentFolderPath ) )
+		{
+			// Update next tab number
+			g_nNextTabNumber ++;
 
-	}; // End of loop to ensure that tab name does not already exist
+			// Format tab name
+			wsprintf( lpszParentFolderPath, TAB_CONTROL_WINDOW_NEW_TAB_NAME_FORMAT_STRING, g_nNextTabNumber );
 
-	// Add tab
-	nResult = TabControlWindowAddTab( hInstance, lpszTabName );
+		}; // End of loop to ensure that tab name does not already exist
 
-	// Ensure that tab was added
-	if( nResult >= 0 )
-	{
-		// Successfully added tab
+		// Add tab
+		nResult = TabControlWindowAddTab( hInstance, lpszParentFolderPath );
 
-		// Update next tab number
-		g_nNextTabNumber ++;
+		// Ensure that tab was added
+		if( nResult >= 0 )
+		{
+			// Successfully added tab
 
-	} // End of successfully added tab
+			// Update next tab number
+			g_nNextTabNumber ++;
+
+		} // End of successfully added tab
+
+	} // End of successfully selected a folder
 
 	// Free string memory
-	delete [] lpszTabName;
+	delete [] lpszParentFolderPath;
 
 	return nResult;
 
 } // End of function TabControlWindowAddTab
 
-int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
+int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 {
 	int nResult = -1;
 
@@ -79,8 +86,13 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
 		tcwData.tcItemHeader.mask		= ( TCIF_TEXT | TCIF_PARAM );
 		tcwData.hWndControl				= hWndControl;
 		tcwData.tcItemHeader.cchTextMax	= STRING_LENGTH;
-		tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszTabName;
-		wsprintf( tcwData.cData, "Data for tab %s.", lpszTabName );
+		tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszParentFolderPath;
+
+		// Allocate tab control window data structure memory
+		tcwData.lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Update parent folder path in tab control window data structure
+		lstrcpy( tcwData.lpszParentFolderPath, lpszParentFolderPath );
 
 		// Get font
 		hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
@@ -89,7 +101,7 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszTabName )
 		SendMessage( hWndControl, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
 		// Add text to control window
-		SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszTabName );
+		SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszParentFolderPath );
 
 		// Count tabs
 		nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
@@ -217,6 +229,58 @@ BOOL TabControlWindowDoesTabExist( LPCTSTR lpszRequiredTabName )
 
 } // End of function TabControlWindowDoesTabExist
 
+BOOL TabControlWindowGetParentFolderPath( int nWhichTab, LPTSTR lpszParentFolderPath )
+{
+	BOOL bResult = FALSE;
+
+	TAB_CONTROL_WINDOW_DATA tcwData;
+
+	// Allocate string memory
+	LPTSTR lpszTabName = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Clear tab control window data structure
+	ZeroMemory( &tcwData, sizeof( tcwData ) );
+
+	// Initialise tab control window data structure
+	tcwData.tcItemHeader.mask = TCIF_PARAM;
+
+	// Get tab control item
+	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
+	{
+		// Successfully got tab control item
+
+		// Get parent folder path
+		if( lstrcpy( lpszParentFolderPath, tcwData.lpszParentFolderPath ) )
+		{
+			// Successfully got parent folder path
+
+			// Update return value
+			bResult = TRUE;
+
+		} // End of successfully got parent folder path
+
+	} // End of successfully got tab control item
+
+	return bResult;
+
+} // End of function TabControlWindowGetParentFolderPath
+
+BOOL TabControlWindowGetParentFolderPath( LPTSTR lpszParentFolderPath )
+{
+	BOOL bResult = FALSE;
+
+	int nSelectedTab;
+
+	// Get selected tab
+	nSelectedTab = SendMessage( g_hWndTabControl, TCM_GETCURSEL, ( WPARAM )NULL, ( LPARAM )NULL );
+
+	// Get parent folder path
+	bResult = TabControlWindowGetParentFolderPath( nSelectedTab, lpszParentFolderPath );
+
+	return bResult;
+
+} // End of function TabControlWindowGetParentFolderPath
+
 BOOL TabControlWindowGetRect( LPRECT lpRect )
 {
 	// Get tab control window rect
@@ -231,7 +295,7 @@ int TabControlWindowGetSelectedItem()
 
 } // End of function TabControlWindowGetSelectedItem
 
-BOOL TabControlWindowGetTabName( int nWhichItem, LPTSTR lpszTabName )
+BOOL TabControlWindowGetTabName( int nWhichTab, LPTSTR lpszTabName )
 {
 	BOOL bResult = FALSE;
 
@@ -246,7 +310,7 @@ BOOL TabControlWindowGetTabName( int nWhichItem, LPTSTR lpszTabName )
 	tcItem.pszText		= lpszTabName;
 
 	// Get tab control item
-	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichItem, ( LPARAM )&tcItem ) )
+	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )&tcItem ) )
 	{
 		// Successfully got tab control item
 
@@ -254,6 +318,22 @@ BOOL TabControlWindowGetTabName( int nWhichItem, LPTSTR lpszTabName )
 		bResult = TRUE;
 
 	} // End of successfully got tab control item
+
+	return bResult;
+
+} // End of function TabControlWindowGetTabName
+
+BOOL TabControlWindowGetTabName( LPTSTR lpszTabName )
+{
+	BOOL bResult = FALSE;
+
+	int nSelectedTab;
+
+	// Get selected tab
+	nSelectedTab = SendMessage( g_hWndTabControl, TCM_GETCURSEL, ( WPARAM )NULL, ( LPARAM )NULL );
+
+	// Get selected tab name
+	bResult = TabControlWindowGetTabName( nSelectedTab, lpszTabName );
 
 	return bResult;
 
@@ -444,7 +524,7 @@ BOOL TabControlWindowMoveControlWindow()
 
 } // End of function TabControlWindowMoveControlWindow
 
-BOOL TabControlWindowOnTabSelected( int nWhichItem, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) )
+BOOL TabControlWindowOnTabSelected( int nWhichTab, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) )
 {
 	BOOL bResult = FALSE;
 
@@ -462,7 +542,7 @@ BOOL TabControlWindowOnTabSelected( int nWhichItem, BOOL( *lpStatusFunction )( L
 	tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszTabName;
 
 	// Get tab control item
-	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichItem, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
+	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
 	{
 		// Successfully got tab control item
 
@@ -486,7 +566,7 @@ BOOL TabControlWindowOnTabSelected( int nWhichItem, BOOL( *lpStatusFunction )( L
 		ShowWindow( g_hWndActiveControl, SW_SHOW );
 
 		// Show item text on status bar window
-		( *lpStatusFunction )( tcwData.cData );
+		( *lpStatusFunction )( tcwData.lpszParentFolderPath );
 
 		// Update return value
 		bResult = TRUE;

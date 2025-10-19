@@ -1,6 +1,6 @@
-// Tab.cpp
+// File.cpp
 
-#include "Tab.h"
+#include "File.h"
 
 int ShowAboutMessage( HWND hWndParent )
 {
@@ -383,7 +383,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 			// A close message
 
 			// Save tabs
-			if( TabControlWindowSave( TABS_FILE_NAME ) )
+			if( TabControlWindowSave( FOLDERS_FILE_NAME ) )
 			{
 				// Successfully saved tabs
 
@@ -537,7 +537,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow )
 			UpdateWindow( hWndMain );
 
 			// Load tabs
-			TabControlWindowLoad( TABS_FILE_NAME, hInstance );
+			TabControlWindowLoad( FOLDERS_FILE_NAME, hInstance );
 
 			// Get selected item
 			nSelectedItem = TabControlWindowGetSelectedItem();
