@@ -67,6 +67,10 @@ BOOL TabControlWindowMoveControlWindow();
 
 BOOL TabControlWindowOnTabSelected( int nWhichTab, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
 
+int TabControlWindowPopulateTab( int nWhichTab, LPCTSTR lpszFolderPath );
+
+int TabControlWindowPopulateTab( LPCTSTR lpszFolderPath );
+
 int TabControlWindowSave( LPCTSTR lpszFileName );
 
 BOOL TabControlWindowSelectTab( int nWhichTab, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );

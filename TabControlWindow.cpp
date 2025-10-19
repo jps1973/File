@@ -91,23 +91,27 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 		// Allocate tab control window data structure memory
 		tcwData.lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
 
-		// Update parent folder path in tab control window data structure
-		lstrcpy( tcwData.lpszParentFolderPath, lpszParentFolderPath );
-
 		// Get font
 		hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
 		// Set control window font
 		SendMessage( hWndControl, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
 
-		// Add text to control window
-		SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszParentFolderPath );
-
 		// Count tabs
 		nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 		// Add tab
 		nResult = SendMessage( g_hWndTabControl, TCM_INSERTITEM, ( WPARAM )nTabCount, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) );
+
+		// Ensure that tab was added
+		if( nResult >= 0 )
+		{
+			// Successfully added tab
+
+			// Populate tab
+			TabControlWindowPopulateTab( nResult, lpszParentFolderPath );
+
+		} // End of successfully added tab
 
 	} // End of successfully created control window
 
@@ -579,6 +583,128 @@ BOOL TabControlWindowOnTabSelected( int nWhichTab, BOOL( *lpStatusFunction )( LP
 	return bResult;
 
 } // End of function TabControlWindowOnTabSelected
+
+int TabControlWindowPopulateTab( int nWhichTab, LPCTSTR lpszFolderPath )
+{
+	int nResult = 0;
+
+	TAB_CONTROL_WINDOW_DATA tcwData;
+
+	// Allocate string memory
+	LPTSTR lpszTabName = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Clear tab control window data structure
+	ZeroMemory( &tcwData, sizeof( tcwData ) );
+
+	// Initialise tab control window data structure
+	tcwData.tcItemHeader.mask		= ( TCIF_TEXT | TCIF_PARAM );
+	tcwData.tcItemHeader.cchTextMax	= STRING_LENGTH;
+	tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszTabName;
+
+	// Get tab control item
+	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
+	{
+		// Successfully got tab control item
+		WIN32_FIND_DATA wfd;
+		HANDLE hFileFind = INVALID_HANDLE_VALUE;
+
+		// Allocate string memory
+		LPTSTR lpszParentFolderPath		= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszFullSearchPattern	= new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// See if active control window is valid
+		if( g_hWndActiveControl )
+		{
+			// Active control window is valid
+
+			// Hide active control window
+			ShowWindow( g_hWndActiveControl, SW_HIDE );
+
+		} // End of active control window is valid
+
+		// Update active control window
+		g_hWndActiveControl = tcwData.hWndControl;
+
+		// Move active control window
+		TabControlWindowMoveControlWindow();
+
+		// Show active control window
+		ShowWindow( g_hWndActiveControl, SW_SHOW );
+
+		// Store parent folder path
+		lstrcpy( lpszParentFolderPath, lpszFolderPath );
+
+		// Ensure that parent folder path ends with a back-slash
+		if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+		{
+			// Parent folder path does not end with a back-slash
+
+			// Append a back-slash onto parent folder
+			lstrcat( lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
+
+		} // End of parent folder path does not end with a back-slash
+
+		// Update parent folder path in tab control window data structure
+		lstrcpy( tcwData.lpszParentFolderPath, lpszParentFolderPath );
+
+		// Copy parent folder path into full search pattern
+		lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
+
+		// Append all files filter onto full search pattern
+		lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
+
+		// Find first item
+		hFileFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+		// Ensure that first item was found
+		if( hFileFind != INVALID_HANDLE_VALUE )
+		{
+			// Successfully found first item
+
+			// Loop through all items
+			do
+			{
+				// See if found item is a file
+				if( !( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
+				{
+					// Found item is a file
+
+					// Add file name to control window
+					SendMessage( g_hWndActiveControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )wfd.cFileName );
+
+					// Update return value
+					nResult ++;
+
+				} // End of found item is a file
+
+			} while( FindNextFile( hFileFind, &wfd ) != 0 ); // End of loop through all items
+
+			// Close file find
+			FindClose( hFileFind );
+
+		} // End of successfully found first item
+
+	} // End of successfully got tab control item
+
+	return nResult;
+
+} // End of function TabControlWindowPopulateTab
+
+int TabControlWindowPopulateTab( LPCTSTR lpszFolderPath )
+{
+	int nResult = 0;
+
+	int nSelectedTab;
+
+	// Get selected tab
+	nSelectedTab = SendMessage( g_hWndTabControl, TCM_GETCURSEL, ( WPARAM )NULL, ( LPARAM )NULL );
+
+	// Populate selected tab name
+	nResult = TabControlWindowPopulateTab( nSelectedTab, lpszFolderPath );
+
+	return nResult;
+
+} // End of function TabControlWindowPopulateTab
 
 int TabControlWindowSave( LPCTSTR lpszFileName )
 {
