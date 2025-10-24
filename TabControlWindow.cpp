@@ -239,9 +239,6 @@ BOOL TabControlWindowGetParentFolderPath( int nWhichTab, LPTSTR lpszParentFolder
 
 	TAB_CONTROL_WINDOW_DATA tcwData;
 
-	// Allocate string memory
-	LPTSTR lpszTabName = new char[ STRING_LENGTH + sizeof( char ) ];
-
 	// Clear tab control window data structure
 	ZeroMemory( &tcwData, sizeof( tcwData ) );
 
@@ -605,12 +602,6 @@ int TabControlWindowPopulateTab( int nWhichTab, LPCTSTR lpszFolderPath )
 	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
 	{
 		// Successfully got tab control item
-		WIN32_FIND_DATA wfd;
-		HANDLE hFileFind = INVALID_HANDLE_VALUE;
-
-		// Allocate string memory
-		LPTSTR lpszParentFolderPath		= new char[ STRING_LENGTH + sizeof( char ) ];
-		LPTSTR lpszFullSearchPattern	= new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// See if active control window is valid
 		if( g_hWndActiveControl )
@@ -631,58 +622,8 @@ int TabControlWindowPopulateTab( int nWhichTab, LPCTSTR lpszFolderPath )
 		// Show active control window
 		ShowWindow( g_hWndActiveControl, SW_SHOW );
 
-		// Store parent folder path
-		lstrcpy( lpszParentFolderPath, lpszFolderPath );
-
-		// Ensure that parent folder path ends with a back-slash
-		if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
-		{
-			// Parent folder path does not end with a back-slash
-
-			// Append a back-slash onto parent folder
-			lstrcat( lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
-
-		} // End of parent folder path does not end with a back-slash
-
-		// Update parent folder path in tab control window data structure
-		lstrcpy( tcwData.lpszParentFolderPath, lpszParentFolderPath );
-
-		// Copy parent folder path into full search pattern
-		lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
-
-		// Append all files filter onto full search pattern
-		lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
-
-		// Find first item
-		hFileFind = FindFirstFile( lpszFullSearchPattern, &wfd );
-
-		// Ensure that first item was found
-		if( hFileFind != INVALID_HANDLE_VALUE )
-		{
-			// Successfully found first item
-
-			// Loop through all items
-			do
-			{
-				// See if found item is a file
-				if( !( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
-				{
-					// Found item is a file
-
-					// Add file name to control window
-					SendMessage( g_hWndActiveControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )wfd.cFileName );
-
-					// Update return value
-					nResult ++;
-
-				} // End of found item is a file
-
-			} while( FindNextFile( hFileFind, &wfd ) != 0 ); // End of loop through all items
-
-			// Close file find
-			FindClose( hFileFind );
-
-		} // End of successfully found first item
+		// Populate active control window
+		ControlWindowPopulate( g_hWndActiveControl, lpszFolderPath );
 
 	} // End of successfully got tab control item
 

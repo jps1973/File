@@ -19,3 +19,5 @@ HWND ControlWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 BOOL ControlWindowHandleCommandMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
 
 BOOL ControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
+
+int ControlWindowPopulate( HWND hWndControl, LPCTSTR lpszFolderPath );
