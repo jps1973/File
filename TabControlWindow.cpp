@@ -521,6 +521,10 @@ BOOL TabControlWindowMoveControlWindow()
 	// Move control window
 	bResult = MoveWindow( g_hWndActiveControl, rc.left, rc.top, nControlWindowWidth, nControlWindowHeight, TRUE );
 
+	// Auto-size all columns in control window
+	ControlWindowAutoSizeAllColumns( g_hWndActiveControl );
+
+
 	return bResult;
 
 } // End of function TabControlWindowMoveControlWindow

@@ -2,6 +2,24 @@
 
 #include "ControlWindow.h"
 
+int ControlWindowAutoSizeAllColumns( HWND hWndControl )
+{
+	int nResult = 0;
+
+	int nWhichColumn;
+
+	// Loop through all columns
+	for( nWhichColumn = 0; nWhichColumn < CONTROL_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
+	{
+		// Auto-size current column
+		SendMessage( hWndControl, LVM_SETCOLUMNWIDTH, ( WPARAM )nWhichColumn, ( LPARAM )LVSCW_AUTOSIZE_USEHEADER );
+
+	}; // End of loop through all columns
+
+	return nResult;
+
+} // End of function ControlWindowAutoSizeAllColumns
+
 HWND ControlWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 {
 	HWND hWndControl;
@@ -13,6 +31,30 @@ HWND ControlWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 	if( hWndControl )
 	{
 		// Successfully created control window
+		LVCOLUMN lvColumn;
+		int nWhichColumn;
+		LPCTSTR lpszColumnTitles [] = CONTROL_WINDOW_COLUMN_TITLES;
+
+		// Clear list view column structure
+		ZeroMemory( &lvColumn, sizeof( lvColumn ) );
+
+		// Initialise list view column structure
+		lvColumn.mask	= ( LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM );
+		lvColumn.cx		= CONTROL_WINDOW_DEFAULT_COLUMN_WIDTH;
+
+		// Set extended list view window style
+		SendMessage( hWndControl, LVM_SETEXTENDEDLISTVIEWSTYLE, ( WPARAM )0, ( LPARAM )CONTROL_WINDOW_EXTENDED_STYLE );
+
+		// Loop through all columns
+		for( nWhichColumn = 0; nWhichColumn < CONTROL_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
+		{
+			// Update list view column structure for current column
+			lvColumn.pszText = ( LPTSTR )( lpszColumnTitles[ nWhichColumn ] );
+
+			// Add column to list view window
+			SendMessage( hWndControl, LVM_INSERTCOLUMN, ( WPARAM )nWhichColumn, ( LPARAM )&lvColumn );
+
+		}; // End of loop through all columns
 
 	} // End of successfully created control window
 
@@ -110,6 +152,15 @@ int ControlWindowPopulate( HWND hWndControl, LPCTSTR lpszFolderPath )
 	if( hFileFind != INVALID_HANDLE_VALUE )
 	{
 		// Successfully found first item
+		LVITEM lvItem;
+
+		// Clear list view item structure
+		ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+		// Initialise list view item structure
+		lvItem.mask			= LVIF_TEXT;
+		lvItem.cchTextMax	= STRING_LENGTH;
+		lvItem.iItem		= 0;
 
 		// Delete all items from control window
 		SendMessage( hWndControl, LB_RESETCONTENT, ( WPARAM )NULL, ( LPARAM )NULL );
@@ -122,8 +173,12 @@ int ControlWindowPopulate( HWND hWndControl, LPCTSTR lpszFolderPath )
 			{
 				// Found item is a file
 
-				// Add file name to control window
-				SendMessage( hWndControl, LB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )wfd.cFileName );
+				// Update list view item structure for found item name
+				lvItem.iSubItem	= CONTROL_WINDOW_NAME_COLUMN_ID;
+				lvItem.pszText	= wfd.cFileName;
+
+				// Add found item to list view window
+				SendMessage( hWndControl, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
 				// Update return value
 				nResult ++;
@@ -131,6 +186,9 @@ int ControlWindowPopulate( HWND hWndControl, LPCTSTR lpszFolderPath )
 			} // End of found item is a file
 
 		} while( FindNextFile( hFileFind, &wfd ) != 0 ); // End of loop through all items
+
+		// Auto-size all columns
+		ControlWindowAutoSizeAllColumns( hWndControl );
 
 		// Close file find
 		FindClose( hFileFind );
