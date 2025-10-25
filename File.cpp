@@ -349,6 +349,32 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMsg, WPARAM wParam, L
 				} // End of notify message was not handled from tab control window
 
 			} // End of notify message is from tab control window
+			else if( TabControlWindowIsControlWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from a control window
+
+				// Allocate string memory
+				LPTSTR lpszParentFolderPath = new char[ STRING_LENGTH ];
+
+				// Get parent folder path
+				if( TabControlWindowGetParentFolderPath( lpNmHdr->hwndFrom, lpszParentFolderPath ) )
+				{
+					// Successfully got parent folder path
+
+					// Handle notify message from the control window
+					if( !( ControlWindowHandleNotifyMessage( lpNmHdr->hwndFrom, lpszParentFolderPath, wParam, lParam, &StatusBarWindowSetText ) ) )
+					{
+						// Notify message was not handled from the control window
+
+						// Call default procedure
+						lr = DefWindowProc( hWndMain, uMsg, wParam, lParam );
+
+					} // End of notify message was not handled from the control window
+
+				} // End of successfully got parent folder path
+				else MessageBox( hWndMain, "Prob", "", MB_OK );
+
+			} // End of notify message is from a control window
 			else
 			{
 				// Notify message is not from tab control window

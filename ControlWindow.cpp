@@ -62,42 +62,120 @@ HWND ControlWindowCreate( HWND hWndParent, HINSTANCE hInstance )
 
 } // End of function ControlWindowCreate
 
-BOOL ControlWindowHandleCommandMessage( WPARAM wParam, LPARAM, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
+BOOL ControlWindowGetItemPath( HWND hWndControl, int nWhichItem, LPCTSTR lpszParentFolderPath, LPTSTR lpszItemPath )
 {
 	BOOL bResult = FALSE;
 
-	// Select control window notification code
-	switch( HIWORD( wParam ) )
-	{
-		default:
-		{
-			// Default notification code
+	LVITEM lvItem;
 
-			// No need to do anything here, just continue with default result
+	// Copy parent folder path into item path
+	lstrcpy( lpszItemPath, lpszParentFolderPath );
+
+	// Ensure that item path ends in a back-slash
+	if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+	{
+		// Item path does not end in a back-slash
+
+		// Append a back-slash onto item path
+		lstrcat( lpszItemPath, ASCII_BACK_SLASH_STRING );
+
+	} // End of item path does not end in a back-slash
+
+	// Clear list view item structure
+	ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+	// Initialise list view item structure
+	lvItem.mask			= LVIF_TEXT;
+	lvItem.cchTextMax	= STRING_LENGTH;
+	lvItem.iItem		= nWhichItem;
+	lvItem.iSubItem		= CONTROL_WINDOW_NAME_COLUMN_ID;
+	lvItem.pszText		= ( lpszItemPath + lstrlen( lpszItemPath ) );
+
+	// Get item from list view window
+	bResult = SendMessage( hWndControl, LVM_GETITEM, ( WPARAM )NULL, ( LPARAM )&lvItem );
+
+	return bResult;
+
+} // End of function ControlWindowGetItemPath
+
+BOOL ControlWindowHandleNotifyMessage( HWND hWndControl, LPTSTR lpszParentFolderPath, WPARAM, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
+{
+	BOOL bResult = FALSE;
+
+	LPNMLISTVIEW lpNmListView;
+
+	// Get list view notify message handler
+	lpNmListView = ( LPNMLISTVIEW )lParam;
+
+	// Select control window notification code
+	switch( lpNmListView->hdr.code )
+	{
+		case NM_DBLCLK:
+		{
+			// A double click notify message
+
+			// Allocate string memory
+			LPTSTR lpszFilePath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+			// Get file path
+			if( ControlWindowGetItemPath( hWndControl, lpNmListView->iItem, lpszParentFolderPath, lpszFilePath ) )
+			{
+				// Successfully got file path
+
+				// Display file path
+				MessageBox( NULL, lpszFilePath, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+
+			} // End of successfully got file path
+
+			// Free string memory
+			delete [] lpszFilePath;
 
 			// Break out of switch
 			break;
 
-		} // End of default notification code
+		} // End of a double click notify message
+		case LVN_COLUMNCLICK:
+		{
+			// A column click notify message
+/*
+			// Sort the list view
+			ListView_SortItemsEx( g_hWndListView, &ListViewWindowCompare, lpNmListView->iSubItem );
+*/
+			// Break out of switch
+			break;
 
-	}; // End of selection for control window notification code
+		} // End of a column click notify message
+		case LVN_ITEMCHANGED:
+		{
+			// A list view item changed notify message
 
-	return bResult;
+			// See if item state has changed to selected
+			if( ( lpNmListView->uNewState ^ lpNmListView->uOldState ) & LVIS_SELECTED )
+			{
+				// Item state has changed to selected
 
-} // End of function ControlWindowHandleCommandMessage
+				// Allocate string memory
+				LPTSTR lpszItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
 
-BOOL ControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
-{
-	BOOL bResult = FALSE;
+				// Get item path
+				if( ControlWindowGetItemPath( hWndControl, lpNmListView->iItem, lpszParentFolderPath, lpszItemPath ) )
+				{
+					// Successfully got item path
 
-	LPNMHDR lpNmhdr;
+					// Call status function
+					bResult = ( *lpStatusFunction )( lpszItemPath );
 
-	// Get notify message handler
-	lpNmhdr = ( ( LPNMHDR )lParam );
+				} // End of successfully got item path
 
-	// Select control window notification code
-	switch( lpNmhdr->code )
-	{
+				// Free string memory
+				delete [] lpszItemPath;
+
+			} // End of item state has changed to selected
+
+			// Break out of switch
+			break;
+
+		} // End of a list view item changed notify message
 		default:
 		{
 			// Default notification code

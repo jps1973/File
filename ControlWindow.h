@@ -29,8 +29,8 @@ int ControlWindowAutoSizeAllColumns( HWND hWndControl );
 
 HWND ControlWindowCreate( HWND hWndParent, HINSTANCE hInstance );
 
-BOOL ControlWindowHandleCommandMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
+BOOL ControlWindowGetItemPath( HWND hWndControl, int nWhichItem, LPCTSTR lpszParentFolderPath, LPTSTR lpszItemPath );
 
-BOOL ControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
+BOOL ControlWindowHandleNotifyMessage( HWND hWndControl, LPTSTR lpszParentFolderPath, WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
 
 int ControlWindowPopulate( HWND hWndControl, LPCTSTR lpszFolderPath );

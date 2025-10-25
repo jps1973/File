@@ -45,6 +45,8 @@ BOOL TabControlWindowDeleteTab( int nWhichTab );
 
 BOOL TabControlWindowDoesTabExist( LPCTSTR lpszRequiredTabName );
 
+BOOL TabControlWindowGetParentFolderPath( HWND hWndControl, LPTSTR lpszParentFolderPath );
+
 BOOL TabControlWindowGetParentFolderPath( int nWhichTab, LPTSTR lpszParentFolderPath );
 
 BOOL TabControlWindowGetParentFolderPath( LPTSTR lpszParentFolderPath );
@@ -58,6 +60,8 @@ BOOL TabControlWindowGetTabName( int nWhichTab, LPTSTR lpszTabName );
 BOOL TabControlWindowGetTabName( LPTSTR lpszTabName );
 
 BOOL TabControlWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszTabName ) );
+
+BOOL TabControlWindowIsControlWindow( HWND hWndRequired );
 
 int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance );
 

@@ -91,6 +91,9 @@ int TabControlWindowAddTab( HINSTANCE hInstance, LPCTSTR lpszParentFolderPath )
 		// Allocate tab control window data structure memory
 		tcwData.lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
 
+		// Add parent folder path to tab control window data structure
+		lstrcpy( tcwData.lpszParentFolderPath, lpszParentFolderPath );
+
 		// Get font
 		hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
@@ -232,6 +235,55 @@ BOOL TabControlWindowDoesTabExist( LPCTSTR lpszRequiredTabName )
 	return bResult;
 
 } // End of function TabControlWindowDoesTabExist
+
+BOOL TabControlWindowGetParentFolderPath( HWND hWndControl, LPTSTR lpszParentFolderPath )
+{
+	BOOL bResult = FALSE;
+
+	int nTabCount;
+	int nWhichTab;
+	TAB_CONTROL_WINDOW_DATA tcwData;
+
+	// Clear tab control window data structure
+	ZeroMemory( &tcwData, sizeof( tcwData ) );
+
+	// Initialise tab control window data structure
+	tcwData.tcItemHeader.mask = TCIF_PARAM;
+
+	// Count tabs
+	nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+
+	// Loop through tabs
+	for( nWhichTab = 0; nWhichTab < nTabCount; nWhichTab ++ )
+	{
+		// Get tab control item
+		if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
+		{
+			// Successfully got tab control item
+
+			// See if this tab has the required window
+			if( tcwData.hWndControl == hWndControl )
+			{
+				// This tab has the required window
+
+				// Update parent folder path
+				lstrcpy( lpszParentFolderPath, tcwData.lpszParentFolderPath );
+
+				// Update return value
+				bResult = TRUE;
+
+				// Force exit from loop
+				nWhichTab = nTabCount;
+
+			} // End of this tab has the required window
+
+		} // End of successfully got tab control item
+
+	}; // End of loop through all tabs
+
+	return bResult;
+
+} // End of function TabControlWindowGetParentFolderPath
 
 BOOL TabControlWindowGetParentFolderPath( int nWhichTab, LPTSTR lpszParentFolderPath )
 {
@@ -399,6 +451,52 @@ BOOL TabControlWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatus
 
 } // End of function TabControlWindowHandleNotifyMessage
 
+BOOL TabControlWindowIsControlWindow( HWND hWndRequired )
+{
+	BOOL bResult = FALSE;
+
+	int nTabCount;
+	int nWhichTab;
+	TAB_CONTROL_WINDOW_DATA tcwData;
+
+	// Clear tab control window data structure
+	ZeroMemory( &tcwData, sizeof( tcwData ) );
+
+	// Initialise tab control window data structure
+	tcwData.tcItemHeader.mask = TCIF_PARAM;
+
+	// Count tabs
+	nTabCount = SendMessage( g_hWndTabControl, TCM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+
+	// Loop through tabs
+	for( nWhichTab = 0; nWhichTab < nTabCount; nWhichTab ++ )
+	{
+		// Get tab control item
+		if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
+		{
+			// Successfully got tab control item
+
+			// See if this tab has the required window
+			if( tcwData.hWndControl == hWndRequired )
+			{
+				// This tab has the required window
+
+				// Update return value
+				bResult = TRUE;
+
+				// Force exit from loop
+				nWhichTab = nTabCount;
+
+			} // End of this tab has the required window
+
+		} // End of successfully got tab control item
+
+	}; // End of loop through all tabs
+
+	return bResult;
+
+} // End of function TabControlWindowIsControlWindow
+
 int TabControlWindowLoad( LPCTSTR lpszFileName, HINSTANCE hInstance )
 {
 	int nResult = 0;
@@ -545,6 +643,7 @@ BOOL TabControlWindowOnTabSelected( int nWhichTab, BOOL( *lpStatusFunction )( LP
 	tcwData.tcItemHeader.mask		= ( TCIF_TEXT | TCIF_PARAM );
 	tcwData.tcItemHeader.cchTextMax	= STRING_LENGTH;
 	tcwData.tcItemHeader.pszText	= ( LPTSTR )lpszTabName;
+	tcwData.lpszParentFolderPath= new char[ STRING_LENGTH + sizeof( char ) ];
 
 	// Get tab control item
 	if( SendMessage( g_hWndTabControl, TCM_GETITEM, ( WPARAM )nWhichTab, ( LPARAM )( LPTCITEMHEADER )( &tcwData ) ) )
@@ -571,7 +670,7 @@ BOOL TabControlWindowOnTabSelected( int nWhichTab, BOOL( *lpStatusFunction )( LP
 		ShowWindow( g_hWndActiveControl, SW_SHOW );
 
 		// Show item text on status bar window
-		( *lpStatusFunction )( tcwData.lpszParentFolderPath );
+		( *lpStatusFunction )( /*lpszTabName*/ tcwData.lpszParentFolderPath );
 
 		// Update return value
 		bResult = TRUE;
