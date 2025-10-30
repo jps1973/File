@@ -4,6 +4,13 @@
 
 #include <windows.h>
 
+void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
+{
+	// Display item text
+	MessageBox( NULL, lpszItemText, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+
+} // End of function ComboBoxWindowSelectionChangeFunction
+
 int ShowAboutMessage( HWND hWndParent )
 {
 	int nResult = 0;
@@ -48,6 +55,12 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Get font
 			hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
+			// Create combo box window
+			if( ComboBoxWindowCreate( hWndMain, hInstance, hFont ) )
+			{
+				// Successfully created combo box window
+			} // End of successfully created combo box window
+
 			// Break out of switch
 			break;
 
@@ -61,6 +74,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
 			nClientHeight	= ( int )HIWORD( lParam );
+
+			// Move combo box window
+			ComboBoxWindowMove( 0, 0, nClientWidth, nClientHeight );
 
 			// Break out of switch
 			break;
@@ -115,8 +131,22 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				{
 					// Default command
 
-					// Call default procedure
-					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+					// See if command message is from combo box window
+					if( IsComboBoxWindow( ( HWND )lParam ) )
+					{
+						// Command message is from combo box window
+
+						// Handle command message from combo box window
+						if( !( ComboBoxWindowHandleCommandMessage( wParam, lParam, ComboBoxWindowSelectionChangeFunction ) ) )
+						{
+							// Command message was not handled from combo box window
+
+							// Call default procedure
+							lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+						} // End of command message was not handled from combo box window
+
+					} // End of command message is from combo box window
 
 					// Break out of switch
 					break;
@@ -290,6 +320,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Update main window
 			UpdateWindow( hWndMain );
+
+			// Populate combo box window
+			ComboBoxWindowAddString( "1234567890" );
+			ComboBoxWindowAddString( "qwertyuiop" );
+			ComboBoxWindowAddString( "asdfghjkl" );
+			ComboBoxWindowAddString( "zxcvbnm" );
+
+			// Select first item on combo box window
+			ComboBoxWindowSelectItem( 0, &ComboBoxWindowSelectionChangeFunction );
 
 			// Main message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
