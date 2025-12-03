@@ -6,8 +6,8 @@
 
 void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
-	// Display item text
-	MessageBox( NULL, lpszItemText, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+	// Show item text on status bar window
+	StatusBarWindowSetText( lpszItemText );
 
 } // End of function ComboBoxWindowSelectionChangeFunction
 
@@ -59,6 +59,13 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			if( ComboBoxWindowCreate( hWndMain, hInstance, hFont ) )
 			{
 				// Successfully created combo box window
+
+				// Create status bar window
+				if( StatusBarWindowCreate( hWndMain, hInstance, hFont ) )
+				{
+					// Successfully created status bar window
+				} // End of successfully created status bar window
+
 			} // End of successfully created combo box window
 
 			// Break out of switch
@@ -74,6 +81,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
 			nClientHeight	= ( int )HIWORD( lParam );
+
+			// Size status bar window
+			StatusBarWindowSize();
 
 			// Move combo box window
 			ComboBoxWindowMove( 0, 0, nClientWidth, nClientHeight );
