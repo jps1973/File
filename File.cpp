@@ -229,10 +229,32 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		} // End of a context menu message
 		case WM_CLOSE:
 		{
-			// A c message
+			// A close message
 
-			// Destroy main window
-			DestroyWindow( hWndMain );
+			// Save combo box window
+			if( ComboBoxWindowSave( FOLDERS_FILE_NAME ) )
+			{
+				// Successfully saved combo box window
+
+				// Destroy main window
+				DestroyWindow( hWndMain );
+
+			} // End of successfully saved combo box window
+			else
+			{
+				// Unable to save combo box window
+
+				// Ensure that user is ok to continue
+				if( MessageBox( hWndMain, UNABLE_TO_SAVE_FOLDERS_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING ) ) == IDYES )
+				{
+					// User is ok to continue
+
+					// Destroy main window
+					DestroyWindow( hWndMain );
+
+				} // End of user is ok to continue
+
+			} // End of unable to save combo box window
 
 			// Break out of switch
 			break;
@@ -321,11 +343,32 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
+			/*
 			// Populate combo box window
 			ComboBoxWindowAddString( "1234567890" );
 			ComboBoxWindowAddString( "qwertyuiop" );
 			ComboBoxWindowAddString( "asdfghjkl" );
 			ComboBoxWindowAddString( "zxcvbnm" );
+			*/
+
+			// Load folders into combo box window
+			if( !( ComboBoxWindowLoad( FOLDERS_FILE_NAME ) ) )
+			{
+				// Unable to load folders into combo box window
+
+				// Allocate string memory
+				LPTSTR lpszCurrentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get current folder path
+				GetCurrentDirectory( STRING_LENGTH, lpszCurrentFolderPath );
+
+				// Add current folder path to combo box window
+				ComboBoxWindowAddString( lpszCurrentFolderPath );
+
+				// Free string memory
+				delete [] lpszCurrentFolderPath;
+
+			} // End of unable to load folders into combo box window
 
 			// Select first item on combo box window
 			ComboBoxWindowSelectItem( 0, &ComboBoxWindowSelectionChangeFunction );

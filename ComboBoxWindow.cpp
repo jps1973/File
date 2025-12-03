@@ -109,12 +109,176 @@ BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM, void( *lpSelecti
 
 } // End of function ComboBoxWindowHandleCommandMessage
 
+BOOL ComboBoxWindowLoad( LPCTSTR lpszFilePath )
+{
+	BOOL bResult = FALSE;
+
+	HANDLE hFile;
+
+	// Open file
+	hFile = CreateFile( lpszFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+
+	// Ensure that file was opened
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Succesfully opened file
+		DWORD dwFileSize;
+
+		// Get file size
+		dwFileSize = GetFileSize( hFile, NULL );
+
+		// Ensure that file size was got
+		if( dwFileSize != INVALID_FILE_SIZE )
+		{
+			// Successfully got file size
+
+			// Allocate string memory
+			LPSTR lpszFileText = new char[ dwFileSize + sizeof( char ) ];
+
+			// Read file text
+			if( ReadFile( hFile, lpszFileText, dwFileSize, NULL, NULL ) )
+			{
+				// Successfully read file text
+				LPTSTR lpszLine;
+
+				// Terminate file text
+				lpszFileText[ dwFileSize ] = ( char )NULL;
+
+				// Get first line
+				lpszLine = strtok( lpszFileText, NEW_LINE_TEXT );
+
+				// Loop through lines in file
+				while( lpszLine )
+				{
+					// Add line to combo box window
+					if( SendMessage( g_hWndComboBox, CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszLine ) >= 0 )
+					{
+						// Successfully added line to combo box window
+
+						// Update return value
+						bResult = TRUE;
+
+						// Get first line
+						lpszLine = strtok( NULL, NEW_LINE_TEXT );
+
+					} // End of successfully added line to combo box window
+					else
+					{
+						// Unable to add line to combo box window
+
+						// Force exit from loop
+						lpszLine = NULL;
+
+						// Update return value
+						bResult = FALSE;
+
+					} // End of unable to add line to combo box window
+
+				}; // End of loop through lines in file
+
+			} // End of successfully read file text
+
+			// Free string memory
+			delete [] lpszFileText;
+
+		} // End of successfully got file size
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of succesfully opened file
+
+	return bResult;
+
+} // End of function ComboBoxWindowLoad
+
 BOOL ComboBoxWindowMove( int nLeft, int nTop, int nWidth, int nHeight )
 {
 	// Move combo box window
 	return MoveWindow( g_hWndComboBox, nLeft, nTop, nWidth, nHeight, TRUE );
 
 } // End of function ComboBoxWindowMove
+
+BOOL ComboBoxWindowSave( LPCTSTR lpszFilePath )
+{
+	BOOL bResult = FALSE;
+
+	HANDLE hFile;
+
+	// Create file
+	hFile = CreateFile( lpszFilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+
+	// Ensure that file was created
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully created file
+		int nItemCount;
+		int nWhichItem;
+
+		// Allocate string memory
+		LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Count items on list box window
+		nItemCount = SendMessage( g_hWndComboBox, CB_GETCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+
+		// Loop through items on list box window
+		for( nWhichItem = 0; nWhichItem < nItemCount; nWhichItem ++ )
+		{
+			// Get item text
+			if( SendMessage( g_hWndComboBox, CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszItemText ) )
+			{
+				// Successfully got item text
+
+				// Write item text to file
+				if( WriteFile( hFile, lpszItemText, lstrlen( lpszItemText ), NULL, NULL ) )
+				{
+					// Successfully wrote item text to file
+
+					// Write new line text to file
+					WriteFile( hFile, NEW_LINE_TEXT, lstrlen( NEW_LINE_TEXT ), NULL, NULL );
+
+					// Update return value
+					bResult = TRUE;
+
+				} // End of successfully wrote item text to file
+				else
+				{
+					// Unable to write item text to file
+
+					// Update return value
+					bResult = FALSE;
+
+					// Force exit from loop
+					nWhichItem = nItemCount;
+
+				} // End of unable to write item text to file
+
+			} // End of successfully got item text
+			else
+			{
+				// Unable to get item text
+
+				// Update return value
+				bResult = FALSE;
+
+				// Force exit from loop
+				nWhichItem = nItemCount;
+
+			} // End of unable to get item text
+
+		}; // End of loop through items on list box window
+
+		// Free string memory
+		delete [] lpszItemText;
+
+		// Close file
+		CloseHandle(hFile);
+
+	} // End of successfully created file
+
+	return bResult;
+
+} // End of function ComboBoxWindowSave
 
 int ComboBoxWindowSelectItem( int nWhichItem, void( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) )
 {
