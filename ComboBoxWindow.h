@@ -20,6 +20,8 @@ int ComboBoxWindowAddString( LPCTSTR lpszString );
 
 BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
+BOOL ComboBoxWindowGetRect( LPRECT lpRect );
+
 BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM lParam, void( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) );
 
 BOOL ComboBoxWindowLoad( LPCTSTR lpszFilePath );

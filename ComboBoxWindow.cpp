@@ -54,6 +54,13 @@ BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 
 } // End of function ComboBoxWindowCreate
 
+BOOL ComboBoxWindowGetRect( LPRECT lpRect )
+{
+	// Get combo box window rect
+	return GetWindowRect( g_hWndComboBox, lpRect );
+
+} // End of function ComboBoxWindowGetRect
+
 BOOL ComboBoxWindowHandleCommandMessage( WPARAM wParam, LPARAM, void( *lpSelectionChangeFunction )( LPCTSTR lpszItemText ) )
 {
 	BOOL bResult;
