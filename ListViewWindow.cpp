@@ -23,6 +23,41 @@ BOOL IsListViewWindow( HWND hWndSupplied )
 
 } // End of function IsListViewWindow
 
+int ListViewWindowAutoSizeAllColumns()
+{
+	int nResult = 0;
+
+	int nWhichColumn;
+
+	// Loop through all columns
+	for( nWhichColumn = 0; nWhichColumn < LIST_VIEW_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
+	{
+		// Update list view column structure for current column
+
+		// Auto-size current column in list view window
+		if( SendMessage( g_hWndListView, LVM_SETCOLUMNWIDTH, ( WPARAM )nWhichColumn, ( LPARAM )LVSCW_AUTOSIZE_USEHEADER ) )
+		{
+			// Successfully auto-size current column in list view window
+
+			// Update return value
+			nResult ++;
+
+		} // End of successfully auto-size current column in list view window
+		else
+		{
+			// Unable to auto-size current column in list view window
+
+			// Force exit from loop
+			nWhichColumn = LIST_VIEW_WINDOW_NUMBER_OF_COLUMNS;
+
+		} // End of unable to auto-size current column in list view window
+
+	}; // End of loop through all columns
+
+	return nResult;
+
+} // End of function ListViewWindowAutoSizeAllColumns
+
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 {
 	BOOL bResult = FALSE;
@@ -34,9 +69,36 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 	if( g_hWndListView )
 	{
 		// Successfully created list view window
+		int nWhichColumn;
+		LPCTSTR lpszColumnTitles [] = LIST_VIEW_WINDOW_TITLES;
+		LVCOLUMN lvColumn;
+
+		// Clear list view column structure
+		ZeroMemory( &lvColumn, sizeof( lvColumn ) );
+
+		// Initialise list view column structure
+		lvColumn.mask	= ( LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM );
+		lvColumn.cx		= LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH;
 
 		// Set list view window font
 		SendMessage( g_hWndListView, WM_SETFONT, ( WPARAM )hFont, ( LPARAM )TRUE );
+
+		// Set extended list view window style
+		SendMessage( g_hWndListView, LVM_SETEXTENDEDLISTVIEWSTYLE, ( WPARAM )NULL, ( LPARAM )LIST_VIEW_WINDOW_EXTENDED_STYLE );
+
+		// Loop through all columns
+		for( nWhichColumn = 0; nWhichColumn < LIST_VIEW_WINDOW_NUMBER_OF_COLUMNS; nWhichColumn ++ )
+		{
+			// Update list view column structure for current column
+			lvColumn.pszText = ( LPSTR )( lpszColumnTitles[ nWhichColumn ] );
+
+			// Add current column to list view window
+			SendMessage( g_hWndListView, LVM_INSERTCOLUMN, ( WPARAM )nWhichColumn, ( LPARAM )&lvColumn );
+
+		}; // End of loop through all columns
+
+		// Auto-size all list view window columns
+		ListViewWindowAutoSizeAllColumns();
 
 		// Update return value
 		bResult = TRUE;

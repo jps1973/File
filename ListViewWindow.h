@@ -14,6 +14,8 @@
 #define LIST_VIEW_WINDOW_STYLE													( WS_CHILD | WS_VISIBLE | LVS_REPORT )
 #define LIST_VIEW_WINDOW_TEXT													NULL
 
+#define LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH									100
+
 #define LIST_VIEW_WINDOW_TITLES													{ "Name", "Modified" }
 
 typedef enum
@@ -28,6 +30,8 @@ typedef enum
 BOOL IsListViewWindow( HWND hWndSupplied );
 
 int ListViewWindowAddString( LPCTSTR lpszString );
+
+int ListViewWindowAutoSizeAllColumns();
 
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
