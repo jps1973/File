@@ -16,6 +16,10 @@
 
 #define LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH									100
 
+#define LIST_VIEW_WINDOW_MODIFIED_TEXT_FORMAT_STRING							"%04d/%02d/%02d %02d:%02d:%02d"
+
+#define LIST_VIEW_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING					"%s (%d items)"
+
 #define LIST_VIEW_WINDOW_TITLES													{ "Name", "Modified" }
 
 typedef enum
@@ -29,10 +33,14 @@ typedef enum
 
 BOOL IsListViewWindow( HWND hWndSupplied );
 
-int ListViewWindowAddString( LPCTSTR lpszString );
+BOOL ListViewWindowAddItem( LVITEM lvItem, WIN32_FIND_DATA wfd );
 
 int ListViewWindowAutoSizeAllColumns();
 
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
+void ListViewWindowFreeMemory();
+
 BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight );
+
+int ListViewWindowPopulate( LPCTSTR lpszFolderPath );

@@ -4,6 +4,7 @@
 
 // Global variables
 static HWND g_hWndListView;
+static LPTSTR g_lpszParentFolderPath;
 
 BOOL IsListViewWindow( HWND hWndSupplied )
 {
@@ -22,6 +23,53 @@ BOOL IsListViewWindow( HWND hWndSupplied )
 	return bResult;
 
 } // End of function IsListViewWindow
+
+BOOL ListViewWindowAddItem( LVITEM lvItem, WIN32_FIND_DATA wfd )
+{
+	BOOL bResult = FALSE;
+
+	int nItem;
+
+	// Update list view item structure for found item
+	lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+	lvItem.pszText		= wfd.cFileName;
+
+	// Add found item to list view window
+	nItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&lvItem );
+
+	// Ensure that found item was added to list view window
+	if( nItem >= 0 )
+	{
+		// Successfully added found item to list view window
+		SYSTEMTIME stModified;
+
+		// Allocate string memory
+		LPTSTR lpszModified = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Get modified system time
+		FileTimeToSystemTime( &( wfd.ftLastWriteTime ), &stModified );
+
+		// Format modified text
+		wsprintf( lpszModified, LIST_VIEW_WINDOW_MODIFIED_TEXT_FORMAT_STRING, stModified.wYear, stModified.wMonth, stModified.wDay, stModified.wHour, stModified.wMinute, stModified.wSecond );
+
+		// Update list view item structure for modified column
+		lvItem.iSubItem	= LIST_VIEW_WINDOW_MODIFIED_COLUMN_ID;
+		lvItem.pszText	= lpszModified;
+
+		// Set modified item text
+		SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )nItem, ( LPARAM )&lvItem );
+
+		// Update return value
+		bResult = TRUE;
+
+		// Free string memory
+		delete [] lpszModified;
+
+	} // End of successfully added found item to list view window
+
+	return bResult;
+
+} // End of function ListViewWindowAddItem
 
 int ListViewWindowAutoSizeAllColumns()
 {
@@ -73,6 +121,12 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 		LPCTSTR lpszColumnTitles [] = LIST_VIEW_WINDOW_TITLES;
 		LVCOLUMN lvColumn;
 
+		// Allocate global string memory
+		g_lpszParentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Clear parent folder path
+		g_lpszParentFolderPath[ 0 ] = ( char )NULL;
+
 		// Clear list view column structure
 		ZeroMemory( &lvColumn, sizeof( lvColumn ) );
 
@@ -109,9 +163,129 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 
 } // End of function ListViewWindowCreate
 
+void ListViewWindowFreeMemory()
+{
+	// Free global string memory
+	delete [] g_lpszParentFolderPath;
+
+} // End of function ListViewWindowFreeMemory
+
 BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight )
 {
 	// Move list view window
 	return MoveWindow( g_hWndListView, nLeft, nTop, nWidth, nHeight, TRUE );
 
 } // End of function ComboBoxWindowMove
+
+int ListViewWindowPopulate( LPCTSTR lpszFolderPath )
+{
+	int nResult = 0;
+
+	// Allocate string memory
+	LPTSTR lpszParentFolderPath		= new char[ STRING_LENGTH + sizeof( char ) ];
+	LPTSTR lpszFullSearchPattern	= new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Store parent folder path
+	lstrcpy( lpszParentFolderPath, lpszFolderPath );
+
+	// Ensure that parent folder path ends in a back-slash
+	if( lpszParentFolderPath[ lstrlen( lpszParentFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+	{
+		// Parent folder path does not end in a back-slash
+
+		// Append a back-slash onto parent folder path
+		lstrcat( lpszParentFolderPath, ASCII_BACK_SLASH_STRING );
+
+	} // End of parent folder path does not end in a back-slash
+
+	// Copy parent folder path into full search pattern
+	lstrcpy( lpszFullSearchPattern, lpszParentFolderPath );
+
+	// Append all files filter onto full search pattern
+	lstrcat( lpszFullSearchPattern, ALL_FILES_FILTER );
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFileFind;
+
+	// Find first item
+	hFileFind = FindFirstFile( lpszFullSearchPattern, &wfd );
+
+	// Ensure that first item was found
+	if( hFileFind != INVALID_HANDLE_VALUE )
+	{
+		// Successfully found first item
+		LVITEM lvItem;
+
+		// Clear list view item structure
+		ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+		// Initialise list view item structure
+		lvItem.mask			= LVIF_TEXT;
+		lvItem.cchTextMax	= STRING_LENGTH;
+		lvItem.iItem		= 0;
+
+		// Delete all items from list view window
+		SendMessage( g_hWndListView, LVM_DELETEALLITEMS, ( WPARAM )NULL, ( LPARAM )NULL );
+
+		// Loop through all items
+		do
+		{
+			// See if found item is a folder
+			if( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+			{
+				// Found item is a folder
+
+				// Ensure that found item is not dots
+				if( wfd.cFileName[ 0 ] != ASCII_FULL_STOP_CHARACTER )
+				{
+					// Found item is not dots
+
+					// Add item to list view window
+					if( ListViewWindowAddItem( lvItem, wfd ) )
+					{
+						// Successfully added item to list view window
+
+						// Update return value
+						nResult ++;
+
+					} // End of successfully added item to list view window
+
+				} // End of found item is not dots
+
+			} // End of found item is a folder
+			else
+			{
+				// Found item is a file
+
+				// Add item to list view window
+				if( ListViewWindowAddItem( lvItem, wfd ) )
+				{
+					// Successfully added item to list view window
+
+					// Update return value
+					nResult ++;
+
+				} // End of successfully added item to list view window
+
+			} // End of found item is a file
+
+		} while( FindNextFile( hFileFind, &wfd ) != 0 ); // End of loop through all items
+
+		// Close file find
+		FindClose( hFileFind );
+
+		// Auto-size all list view window columns
+		ListViewWindowAutoSizeAllColumns();
+
+		// Update global parent folder path
+		lstrcpy( g_lpszParentFolderPath, lpszParentFolderPath );
+
+	} // End of successfully found first item
+
+	// Free string memory
+	delete [] lpszParentFolderPath;
+	delete [] lpszFullSearchPattern;
+
+	return nResult;
+
+} // End of function ListViewWindowPopulate

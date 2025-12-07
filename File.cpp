@@ -6,8 +6,22 @@
 
 void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
-	// Show item text on status bar window
-	StatusBarWindowSetText( lpszItemText );
+	int nItemCount;
+
+	// Allocate string memory
+	LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Populate list view window
+	nItemCount = ListViewWindowPopulate( lpszItemText );
+
+	// Format status message
+	wsprintf( lpszStatusMessage, LIST_VIEW_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszItemText, nItemCount );
+
+	// Show status message on status bar window
+	StatusBarWindowSetText( lpszStatusMessage );
+
+	// Free string memory
+	delete [] lpszStatusMessage;
 
 } // End of function ComboBoxWindowSelectionChangeFunction
 
@@ -270,6 +284,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			{
 				// Successfully saved combo box window
 
+				// Free list view window memory
+				ListViewWindowFreeMemory();
+
 				// Destroy main window
 				DestroyWindow( hWndMain );
 
@@ -282,6 +299,9 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				if( MessageBox( hWndMain, UNABLE_TO_SAVE_FOLDERS_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING ) ) == IDYES )
 				{
 					// User is ok to continue
+
+					// Free list view window memory
+					ListViewWindowFreeMemory();
 
 					// Destroy main window
 					DestroyWindow( hWndMain );
@@ -376,14 +396,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Update main window
 			UpdateWindow( hWndMain );
-
-			/*
-			// Populate combo box window
-			ComboBoxWindowAddString( "1234567890" );
-			ComboBoxWindowAddString( "qwertyuiop" );
-			ComboBoxWindowAddString( "asdfghjkl" );
-			ComboBoxWindowAddString( "zxcvbnm" );
-			*/
 
 			// Load folders into combo box window
 			if( !( ComboBoxWindowLoad( FOLDERS_FILE_NAME ) ) )
