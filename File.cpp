@@ -195,6 +195,14 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 						} // End of command message was not handled from combo box window
 
 					} // End of command message is from combo box window
+					else
+					{
+						// Command message is not from a control window
+
+						// Call default procedure
+						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+					} // End of command message is not from a control window
 
 					// Break out of switch
 					break;
@@ -251,10 +259,30 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Get notify message handler
 			lpNmHdr = ( LPNMHDR )lParam;
 
-			// Source window is lpNmHdr->hwndFrom
+			// See if notify message is from list view window
+			if( IsListViewWindow( lpNmHdr->hwndFrom ) )
+			{
+				// Notify message is from list view window
 
-			// Call default procedure
-			lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+				// Handle notify message from list view window
+				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &StatusBarWindowSetText ) ) )
+				{
+					// Notify message was not handled from list view window
+
+					// Call default procedure
+					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+				} // End of notify message was not handled from list view window
+
+			} // End of notify message is from list view window
+			else
+			{
+				// Notify message is not from list view window
+
+				// Call default procedure
+				lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+			} // End of notify message is not from list view window
 
 			// Break out of switch
 			break;

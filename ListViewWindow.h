@@ -37,9 +37,15 @@ BOOL ListViewWindowAddItem( LVITEM lvItem, WIN32_FIND_DATA wfd );
 
 int ListViewWindowAutoSizeAllColumns();
 
+int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lParamColumn );
+
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
 void ListViewWindowFreeMemory();
+
+BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemPath );
+
+BOOL ListViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
 
 BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight );
 
