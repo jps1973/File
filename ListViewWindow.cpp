@@ -29,10 +29,15 @@ BOOL ListViewWindowAddItem( LVITEM lvItem, WIN32_FIND_DATA wfd )
 	BOOL bResult = FALSE;
 
 	int nItem;
+	int nImageListIndex;
+
+	// Get image list index
+	nImageListIndex = SystemImageListGetItemIndex( wfd.cFileName );
 
 	// Update list view item structure for found item
 	lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
 	lvItem.pszText		= wfd.cFileName;
+	lvItem.iImage		= nImageListIndex;
 
 	// Add found item to list view window
 	nItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&lvItem );
@@ -187,6 +192,12 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 
 		// Clear parent folder path
 		g_lpszParentFolderPath[ 0 ] = ( char )NULL;
+
+		// Initialise system image list
+		SystemImageListInit();
+
+		// Set list view window image list
+		SystemImageListSetListView( g_hWndListView, LVSIL_SMALL );
 
 		// Clear list view column structure
 		ZeroMemory( &lvColumn, sizeof( lvColumn ) );
@@ -418,12 +429,16 @@ int ListViewWindowPopulate( LPCTSTR lpszFolderPath )
 		ZeroMemory( &lvItem, sizeof( lvItem ) );
 
 		// Initialise list view item structure
-		lvItem.mask			= LVIF_TEXT;
+		lvItem.mask			= ( LVIF_TEXT | LVIF_IMAGE );
 		lvItem.cchTextMax	= STRING_LENGTH;
 		lvItem.iItem		= 0;
 
 		// Delete all items from list view window
 		SendMessage( g_hWndListView, LVM_DELETEALLITEMS, ( WPARAM )NULL, ( LPARAM )NULL );
+
+		// Update current folder
+		SetCurrentDirectory( lpszParentFolderPath );
+		// This will ensure that icons are correct
 
 		// Loop through all items
 		do
