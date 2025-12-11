@@ -31,21 +31,42 @@ BOOL ListViewWindowAddItem( LVITEM lvItem, WIN32_FIND_DATA wfd )
 	int nItem;
 	int nImageListIndex;
 
+	// Allocate string memory
+	LPTSTR lpszDisplayText = new char[ STRING_LENGTH + sizeof( char ) ];
+
 	// Get image list index
 	nImageListIndex = SystemImageListGetItemIndex( wfd.cFileName );
 
-	// Update list view item structure for found item
+	// See if item is a folder
+	if( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+	{
+		// Item is a folder
+
+		// Format display text for folder
+		wsprintf( lpszDisplayText, LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_FORMAT_STRING, LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX, wfd.cFileName );
+
+	} // End of item is a folder
+	else
+	{
+		// Item is a file
+
+		// Update display text for file
+		lstrcpy( lpszDisplayText, wfd.cFileName );
+
+	} // End of item is a folder
+
+	// Update list view item structure for item
 	lvItem.iSubItem		= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
-	lvItem.pszText		= wfd.cFileName;
+	lvItem.pszText		= lpszDisplayText;
 	lvItem.iImage		= nImageListIndex;
 
 	// Add found item to list view window
 	nItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )0, ( LPARAM )&lvItem );
 
-	// Ensure that found item was added to list view window
+	// Ensure that item was added to list view window
 	if( nItem >= 0 )
 	{
-		// Successfully added found item to list view window
+		// Successfully added item to list view window
 		SYSTEMTIME stModified;
 
 		// Allocate string memory
@@ -70,7 +91,10 @@ BOOL ListViewWindowAddItem( LVITEM lvItem, WIN32_FIND_DATA wfd )
 		// Free string memory
 		delete [] lpszModified;
 
-	} // End of successfully added found item to list view window
+	} // End of successfully added item to list view window
+
+	// Free string memory
+	delete [] lpszDisplayText;
 
 	return bResult;
 
@@ -269,8 +293,23 @@ BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszIt
 		// Copy parent folder path into item path
 		lstrcpy( lpszItemPath, g_lpszParentFolderPath );
 
-		// Append item text onto item path
-		lstrcat( lpszItemPath, lpszItemText );
+		// See if item is a folder
+		if( lpszItemText[ 0 ] == LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX )
+		{
+			// Item is a folder
+
+			// Append item text (after folder prefix) onto item path
+			lstrcat( lpszItemPath, ( lpszItemText + sizeof( LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX ) ) );
+
+		} // End of item is a folder
+		else
+		{
+			// Item is a file
+
+			// Append item text onto item path
+			lstrcat( lpszItemPath, lpszItemText );
+
+		} // End of item is a file
 
 		// Update return value
 		bResult = TRUE;
