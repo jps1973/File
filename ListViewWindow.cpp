@@ -323,7 +323,7 @@ BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszIt
 
 } // End of function ListViewWindowGetItemPath
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
+BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
 {
 	BOOL bResult = FALSE;
 
@@ -347,8 +347,8 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpStatusFu
 			{
 				// Successfully got file path
 
-				// Display file path
-				MessageBox( NULL, lpszFilePath, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+				// Call double click function
+				bResult = ( *lpDoubleClickFunction )( lpszFilePath );
 
 			} // End of successfully got file path
 

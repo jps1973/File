@@ -30,6 +30,27 @@ int ComboBoxWindowAddString( LPCTSTR lpszString )
 
 } // End of function ComboBoxWindowAddString
 
+int ComboBoxWindowAddUniqueString( LPCTSTR lpszString )
+{
+	int nResult = -1;
+
+	// Attempt to find string on combo box window
+	nResult = SendMessage( g_hWndComboBox, CB_FINDSTRINGEXACT, ( WPARAM )-1, ( LPARAM )lpszString );
+
+	// See if string was found on combo box window
+	if( nResult == CB_ERR )
+	{
+		// String was not found on combo box window
+
+		// Add string to combo box window
+		nResult = SendMessage( g_hWndComboBox, CB_ADDSTRING, ( WPARAM )NULL, ( LPARAM )lpszString );
+
+	} // End of string was not found on combo box window
+
+	return nResult;
+
+} // End of function ComboBoxWindowAddUniqueString
+
 BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 {
 	BOOL bResult = FALSE;

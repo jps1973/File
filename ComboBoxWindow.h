@@ -18,6 +18,8 @@ BOOL IsComboBoxWindow( HWND hWndSupplied );
 
 int ComboBoxWindowAddString( LPCTSTR lpszString );
 
+int ComboBoxWindowAddUniqueString( LPCTSTR lpszString );
+
 BOOL ComboBoxWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
 BOOL ComboBoxWindowGetRect( LPRECT lpRect );

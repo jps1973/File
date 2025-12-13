@@ -25,6 +25,50 @@ void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 
 } // End of function ComboBoxWindowSelectionChangeFunction
 
+BOOL ListViewWindowDoubleClickFunction( LPCTSTR lpszItemPath )
+{
+	BOOL bResult = FALSE;
+
+	// See if item is a folder
+	if( GetFileAttributes( lpszItemPath ) & FILE_ATTRIBUTE_DIRECTORY )
+	{
+		// Item is a folder
+		int nFolderItem;
+
+		// Add folder to combo box window
+		nFolderItem = ComboBoxWindowAddUniqueString( lpszItemPath );
+
+		// Ensure that folder was added to combo box window
+		if( nFolderItem >= 0 )
+		{
+			// Successfully added folder to combo box window
+
+			// Select folder on combo box window
+			ComboBoxWindowSelectItem( nFolderItem, &ComboBoxWindowSelectionChangeFunction );
+
+		} // End of successfully added folder to combo box window
+
+	} // End of item is a folder
+	else
+	{
+		// Item is a file
+
+		// Open item
+		if( ( INT_PTR )ShellExecute( NULL, SHELL_EXECUTE_OPEN_COMMAND, lpszItemPath, NULL, NULL, SW_SHOWDEFAULT ) > SHELL_EXECUTE_MAXIMUM_FAILURE_RETURN_VALUE )
+		{
+			// Successfully opened item
+
+			// Update return value
+			bResult = TRUE;
+
+		} // End of successfully opened item
+
+	} // End of item is a file
+
+	return bResult;
+
+} // End of function ListViewWindowDoubleClickFunction
+
 int ShowAboutMessage( HWND hWndParent )
 {
 	int nResult = 0;
@@ -265,7 +309,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				// Notify message is from list view window
 
 				// Handle notify message from list view window
-				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &StatusBarWindowSetText ) ) )
+				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &ListViewWindowDoubleClickFunction, &StatusBarWindowSetText ) ) )
 				{
 					// Notify message was not handled from list view window
 
