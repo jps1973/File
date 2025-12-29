@@ -141,6 +141,12 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 		// Clear parent folder path
 		g_lpszParentFolderPath[ 0 ] = ( char )NULL;
 
+		// Initialise system image list
+		SystemImageListInit();
+
+		// Set list view window image list
+		SystemImageListSetListView( g_hWndListView, LVSIL_SMALL );
+
 		// Clear list view column structure
 		ZeroMemory( &lvColumn, sizeof( lvColumn ) );
 
@@ -351,6 +357,7 @@ int ListViewWindowPopulate()
 		// Successfully found first item in current folder
 		LVITEM lvItem;
 		SYSTEMTIME stModified;
+		int nImageListIndex;
 
 		// Allocate string memory
 		LPTSTR lpszModified = new char[ STRING_LENGTH + sizeof( char ) ];
@@ -359,7 +366,7 @@ int ListViewWindowPopulate()
 		ZeroMemory( &lvItem, sizeof( lvItem ) );
 
 		// Initialise list view item structure
-		lvItem.mask			= LVIF_TEXT;
+		lvItem.mask			= ( LVIF_TEXT | LVIF_IMAGE );
 		lvItem.cchTextMax	= STRING_LENGTH;
 		lvItem.iItem		= 0;
 
@@ -379,9 +386,13 @@ int ListViewWindowPopulate()
 				{
 					// Current item is not dots
 
+					// Get image list index for item
+					nImageListIndex = SystemImageListGetItemIndex( wfd.cFileName );
+
 					// Update list view item structure for found item name
 					lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
 					lvItem.pszText	= wfd.cFileName;
+					lvItem.iImage	= nImageListIndex;
 
 					// Add found item to list view window
 					lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
@@ -416,9 +427,13 @@ int ListViewWindowPopulate()
 			{
 				// Current item is a file
 
+				// Get image list index for item
+				nImageListIndex = SystemImageListGetItemIndex( wfd.cFileName );
+
 				// Update list view item structure for found item name
 				lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
 				lvItem.pszText	= wfd.cFileName;
+				lvItem.iImage	= nImageListIndex;
 
 				// Add found item to list view window
 				lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
