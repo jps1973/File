@@ -10,6 +10,7 @@
 #include "Resource.h"
 
 #include "ComboBoxWindow.h"
+#include "ListViewWindow.h"
 #include "StatusBarWindow.h"
 
 #define MAIN_WINDOW_CLASS_NAME													"Main File Window Class"

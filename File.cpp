@@ -60,10 +60,17 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			{
 				// Successfully created combo box window
 
-				// Create status bar window
-				if( StatusBarWindowCreate( hWndMain, hInstance, hFont ) )
+				// Create list view window
+				if( ListViewWindowCreate( hWndMain, hInstance, hFont ) )
 				{
-					// Successfully created status bar window
+					// Successfully created list view window
+
+					// Create status bar window
+					if( StatusBarWindowCreate( hWndMain, hInstance, hFont ) )
+					{
+						// Successfully created status bar window
+					} // End of successfully created status bar window
+
 				} // End of successfully created status bar window
 
 			} // End of successfully created list view window
@@ -77,6 +84,11 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// A size message
 			int nClientWidth;
 			int nClientHeight;
+			RECT rcComboBox;
+			RECT rcStatusBar;
+			int nComboBoxWindowHeight;
+			int nStatusBarWindowHeight;
+			int nListViewWindowHeight;
 
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
@@ -87,6 +99,18 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 
 			// Move combo box window
 			ComboBoxWindowMove( 0, 0, nClientWidth, nClientHeight );
+
+			// Get window rects
+			ComboBoxWindowGetRect( &rcComboBox );
+			StatusBarWindowGetRect( &rcStatusBar );
+
+			// Calculate window sizes
+			nComboBoxWindowHeight	= ( rcComboBox.bottom - rcComboBox.top );
+			nStatusBarWindowHeight	= ( rcStatusBar.bottom - rcStatusBar.top );
+			nListViewWindowHeight	= ( nClientHeight - ( nComboBoxWindowHeight + nStatusBarWindowHeight ) );
+
+			// Move list view window
+			ListViewWindowMove( 0, nComboBoxWindowHeight, nClientWidth, nListViewWindowHeight );
 
 			// Break out of switch
 			break;
