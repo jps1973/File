@@ -177,6 +177,157 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont )
 
 } // End of function ListViewWindowCreate
 
+BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemPath )
+{
+	BOOL bResult = FALSE;
+
+	LVITEM lvItem;
+
+	// Allocate string memory
+	LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Clear list view item structure
+	ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+	// Initialise list view item structure
+	lvItem.mask			= LVIF_TEXT;
+	lvItem.cchTextMax	= STRING_LENGTH;
+	lvItem.iItem		= nWhichItem;
+	lvItem.iSubItem		= nWhichSubItem;
+	lvItem.pszText		= lpszItemText;
+
+	// Get item text from list view window
+	if( SendMessage( g_hWndListView, LVM_GETITEM, ( WPARAM )NULL, ( LPARAM )&lvItem ) )
+	{
+		// Successfully got item text from list view window
+
+		// Get parent folder path into item path
+		if( GetCurrentDirectory( STRING_LENGTH, lpszItemPath ) )
+		{
+			// Successfully got parent folder path into item path
+
+			// Ensure that item path ends with a back-slash
+			if( lpszItemPath[ lstrlen( lpszItemPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+			{
+				// Item path does not end with a back-slash
+
+				// Append a back-slash onto item path
+				lstrcat( lpszItemPath, ASCII_BACK_SLASH_STRING );
+
+			} // End of item path does not end with a back-slash
+
+			// Append item text onto item path
+			lstrcat( lpszItemPath, lpszItemText );
+
+			// Update return value
+			bResult = TRUE;
+
+		} // End of successfully got parent folder path into item path
+
+	} // End of successfully got item text from list view window
+
+	// Free string memory
+	delete [] lpszItemText;
+
+	return bResult;
+
+} // End of function ListViewWindowGetItemPath
+
+BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
+{
+	BOOL bResult = FALSE;
+
+	LPNMLISTVIEW lpNmListView;
+
+	// Get list view notify message handler
+	lpNmListView = ( LPNMLISTVIEW )lParam;
+
+	// Select list view window notification code
+	switch( lpNmListView->hdr.code )
+	{
+		case NM_DBLCLK:
+		{
+			// A double click notify message
+
+			// Allocate string memory
+			LPTSTR lpszFilePath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+			// Get file path
+			if( ListViewWindowGetItemPath( lpNmListView->iItem, lpNmListView->iSubItem, lpszFilePath ) )
+			{
+				// Successfully got file path
+
+				// Call double click function
+				bResult = ( *lpDoubleClickFunction )( lpszFilePath );
+
+			} // End of successfully got file path
+
+			// Free string memory
+			delete [] lpszFilePath;
+
+			// Break out of switch
+			break;
+
+		} // End of a double click notify message
+		case LVN_COLUMNCLICK:
+		{
+			// A column click notify message
+
+			// Sort the list view
+			ListView_SortItemsEx( g_hWndListView, &ListViewWindowCompare, lpNmListView->iSubItem );
+
+			// Break out of switch
+			break;
+
+		} // End of a column click notify message
+		case LVN_ITEMCHANGED:
+		{
+			// A list view item changed notify message
+
+			// See if item state has changed to selected
+			if( ( lpNmListView->uNewState ^ lpNmListView->uOldState ) & LVIS_SELECTED )
+			{
+				// Item state has changed to selected
+
+				// Allocate string memory
+				LPTSTR lpszItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get item path
+				if( ListViewWindowGetItemPath( lpNmListView->iItem, lpNmListView->iSubItem, lpszItemPath ) )
+				{
+					// Successfully got item path
+
+					// Call status function
+					bResult = ( *lpStatusFunction )( lpszItemPath );
+
+				} // End of successfully got item path
+
+				// Free string memory
+				delete [] lpszItemPath;
+
+			} // End of item state has changed to selected
+
+			// Break out of switch
+			break;
+
+		} // End of a list view item changed notify message
+		default:
+		{
+			// Default notification code
+
+			// No need to do anything here, just continue with default result
+
+			// Break out of switch
+			break;
+
+		} // End of default notification code
+
+	}; // End of selection for list view window notification code
+
+	return bResult;
+
+} // End of function ListViewWindowHandleNotifyMessage
+
 BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight )
 {
 	// Move list view window
