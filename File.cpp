@@ -1,8 +1,15 @@
-// Minimal.cpp
+// File.cpp
 
-#include "Minimal.h"
+#include "File.h"
 
 #include <windows.h>
+
+void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
+{
+	// Show item text on status bar window
+	StatusBarWindowSetText( lpszItemText );
+
+} // End of function ComboBoxWindowSelectionChangeFunction
 
 int ShowAboutMessage( HWND hWndParent )
 {
@@ -48,6 +55,19 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Get font
 			hFont = ( HFONT )GetStockObject( DEFAULT_GUI_FONT );
 
+			// Create combo box window
+			if( ComboBoxWindowCreate( hWndMain, hInstance, hFont ) )
+			{
+				// Successfully created combo box window
+
+				// Create status bar window
+				if( StatusBarWindowCreate( hWndMain, hInstance, hFont ) )
+				{
+					// Successfully created status bar window
+				} // End of successfully created status bar window
+
+			} // End of successfully created list view window
+
 			// Break out of switch
 			break;
 
@@ -61,6 +81,12 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Store client width and height
 			nClientWidth	= ( int )LOWORD( lParam );
 			nClientHeight	= ( int )HIWORD( lParam );
+
+			// Size status bar window
+			StatusBarWindowSize();
+
+			// Move combo box window
+			ComboBoxWindowMove( 0, 0, nClientWidth, nClientHeight );
 
 			// Break out of switch
 			break;
@@ -115,8 +141,30 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				{
 					// Default command
 
-					// Call default procedure
-					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+					// See if command message is from combo box window
+					if( IsComboBoxWindow( ( HWND )lParam ) )
+					{
+						// Command message is from combo box window
+
+						// Handle command message from combo box window
+						if( !( ComboBoxWindowHandleCommandMessage( wParam, lParam, ComboBoxWindowSelectionChangeFunction ) ) )
+						{
+							// Command message was not handled from combo box window
+
+							// Call default procedure
+							lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+						} // End of command message was not handled from combo box window
+
+					} // End of command message is from combo box window
+					else
+					{
+						// Command message is not from a control window
+
+						// Call default procedure
+						lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
+
+					} // End of command message is not from a control window
 
 					// Break out of switch
 					break;
@@ -201,8 +249,30 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		{
 			// A c message
 
-			// Destroy main window
-			DestroyWindow( hWndMain );
+			// Save combo box window
+			if( ComboBoxWindowSave( FOLDERS_FILE_NAME ) )
+			{
+				// Successfully saved combo box window
+
+				// Destroy main window
+				DestroyWindow( hWndMain );
+
+			} // End of successfully saved combo box window
+			else
+			{
+				// Unable to save combo box window
+
+				// Ensure that user is ok to continue
+				if( MessageBox( hWndMain, UNABLE_TO_SAVE_FOLDERS_WARNING_MESSAGE, WARNING_MESSAGE_CAPTION, ( MB_YESNO | MB_DEFBUTTON2 | MB_ICONWARNING ) ) == IDYES )
+				{
+					// User is ok to continue
+
+					// Destroy main window
+					DestroyWindow( hWndMain );
+
+				} // End of user is ok to continue
+
+			} // End of unable to save combo box window
 
 			// Break out of switch
 			break;
@@ -290,6 +360,28 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Update main window
 			UpdateWindow( hWndMain );
+
+			// Load folders into combo box window
+			if( !( ComboBoxWindowLoad( FOLDERS_FILE_NAME ) ) )
+			{
+				// Unable to load folders into combo box window
+
+				// Allocate string memory
+				LPTSTR lpszCurrentFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get current folder path
+				GetCurrentDirectory( STRING_LENGTH, lpszCurrentFolderPath );
+
+				// Add current folder path to combo box window
+				ComboBoxWindowAddString( lpszCurrentFolderPath );
+
+				// Free string memory
+				delete [] lpszCurrentFolderPath;
+
+			} // End of unable to load folders into combo box window
+
+			// Select first item on combo box window
+			ComboBoxWindowSelectItem( 0, &ComboBoxWindowSelectionChangeFunction );
 
 			// Main message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
