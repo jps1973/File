@@ -182,4 +182,134 @@ BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight )
 	// Move list view window
 	return MoveWindow( g_hWndListView, nLeft, nTop, nWidth, nHeight, TRUE );
 
-} // End of function ComboBoxWindowMove
+} // End of function ListViewWindowMove
+
+int ListViewWindowPopulate()
+{
+	int nResult = 0;
+
+	WIN32_FIND_DATA wfd;
+	HANDLE hFileFind;
+
+	// Find first item in current folder
+	hFileFind = FindFirstFile( ALL_FILES_FILTER, &wfd );
+
+	// Ensure that first item in current folder was found
+	if( hFileFind != INVALID_HANDLE_VALUE )
+	{
+		// Successfully found first item in current folder
+		LVITEM lvItem;
+		SYSTEMTIME stModified;
+
+		// Allocate string memory
+		LPTSTR lpszModified = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Clear list view item structure
+		ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+		// Initialise list view item structure
+		lvItem.mask			= LVIF_TEXT;
+		lvItem.cchTextMax	= STRING_LENGTH;
+		lvItem.iItem		= 0;
+
+		// Delete all items from list view window
+		SendMessage( g_hWndListView, LVM_DELETEALLITEMS, ( WPARAM )NULL, ( LPARAM )NULL );
+
+		// Loop through all items
+		do
+		{
+			// See if current item is a folder
+			if( wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+			{
+				// Current item is a folder
+
+				// Ensure that current item is not dots
+				if( wfd.cFileName[ 0 ] != ASCII_FULL_STOP_CHARACTER )
+				{
+					// Current item is not dots
+
+					// Update list view item structure for found item name
+					lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+					lvItem.pszText	= wfd.cFileName;
+
+					// Add found item to list view window
+					lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+					// Ensure that found item was added to list view window
+					if( lvItem.iItem >= 0 )
+					{
+						// Successfully added found item to list view window
+
+						// Get modified system time
+						FileTimeToSystemTime( &( wfd.ftLastWriteTime ), &stModified );
+
+						// Format modified text
+						wsprintf( lpszModified, LIST_VIEW_WINDOW_MODIFIED_TEXT_FORMAT_STRING, stModified.wYear, stModified.wMonth, stModified.wDay, stModified.wHour, stModified.wMinute, stModified.wSecond );
+
+						// Update list view item structure for found item name
+						lvItem.iSubItem	= LIST_VIEW_WINDOW_MODIFIED_COLUMN_ID;
+						lvItem.pszText	= lpszModified;
+
+						// Add found item to list view window
+						SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+						// Update list view item structure for next item
+						lvItem.iItem ++;
+
+					} // End of successfully added found item to list view window
+
+				} // End of current item is not dots
+
+			} // End of current item is a folder
+			else
+			{
+				// Current item is a file
+
+				// Update list view item structure for found item name
+				lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
+				lvItem.pszText	= wfd.cFileName;
+
+				// Add found item to list view window
+				lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+				// Ensure that found item was added to list view window
+				if( lvItem.iItem >= 0 )
+				{
+					// Successfully added found item to list view window
+
+					// Get modified system time
+					FileTimeToSystemTime( &( wfd.ftLastWriteTime ), &stModified );
+
+					// Format modified text
+					wsprintf( lpszModified, LIST_VIEW_WINDOW_MODIFIED_TEXT_FORMAT_STRING, stModified.wYear, stModified.wMonth, stModified.wDay, stModified.wHour, stModified.wMinute, stModified.wSecond );
+
+					// Update list view item structure for found item name
+					lvItem.iSubItem	= LIST_VIEW_WINDOW_MODIFIED_COLUMN_ID;
+					lvItem.pszText	= lpszModified;
+
+					// Add found item to list view window
+					SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+					// Update list view item structure for next item
+					lvItem.iItem ++;
+
+				} // End of successfully added found item to list view window
+
+			} // End of current item is a file
+
+		} while( FindNextFile( hFileFind, &wfd ) != 0 ); // End of loop through all items
+
+		// Auto-size all list view window columns
+		ListViewWindowAutoSizeAllColumns();
+
+		// Close file find
+		FindClose( hFileFind );
+
+		// Free string memory
+		delete [] lpszModified;
+
+	} // End of successfully found first item in current folder
+
+	return nResult;
+
+} // End of function ListViewWindowPopulate

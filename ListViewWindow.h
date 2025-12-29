@@ -43,3 +43,5 @@ int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
 BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight );
+
+int ListViewWindowPopulate();

@@ -6,8 +6,15 @@
 
 void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
-	// Show item text on status bar window
-	StatusBarWindowSetText( lpszItemText );
+	// Set current folder
+	if( SetCurrentDirectory( lpszItemText ) )
+	{
+		// Successfully set current folder
+
+		// Populate list view window
+		ListViewWindowPopulate();
+
+	} // End of successfully set current folder
 
 } // End of function ComboBoxWindowSelectionChangeFunction
 
