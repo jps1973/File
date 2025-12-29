@@ -4,6 +4,9 @@
 
 #include <windows.h>
 
+// Global variables
+static LPTSTR g_lpszFoldersFilePath;
+
 void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
 	// Set current folder
@@ -26,9 +29,24 @@ BOOL ListViewWindowDoubleClickFunction( LPCTSTR lpszItemPath )
 	if( GetFileAttributes( lpszItemPath ) & FILE_ATTRIBUTE_DIRECTORY )
 	{
 		// Item is a folder
+		int nFolderPosition;
 
-		// Display item path
-		MessageBox( NULL, lpszItemPath, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+		// Add folder to combo box window
+		nFolderPosition = ComboBoxWindowAddString( lpszItemPath );
+
+		// Ensure that folder was added to combo box window
+		if( nFolderPosition >= 0 )
+		{
+			// Successfully added folder to combo box window
+
+			// Select folder on combo box window
+			if( ComboBoxWindowSelectItem( nFolderPosition, &ComboBoxWindowSelectionChangeFunction ) != CB_ERR )
+			{
+				// Successfully selected folder on combo box window
+
+			} // End of successfully selected folder on combo box window
+
+		} // End of successfully added folder to combo box window
 
 	} // End of item is a folder
 	else
@@ -331,10 +349,10 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 		} // End of a context menu message
 		case WM_CLOSE:
 		{
-			// A c message
+			// A close message
 
 			// Save combo box window
-			if( ComboBoxWindowSave( FOLDERS_FILE_NAME ) )
+			if( ComboBoxWindowSave( g_lpszFoldersFilePath ) )
 			{
 				// Successfully saved combo box window
 
@@ -397,6 +415,27 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 	WNDCLASSEX wcMain;
 
+	// Allocate global memory
+	g_lpszFoldersFilePath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Get current folder into folders file path
+	GetCurrentDirectory( STRING_LENGTH, g_lpszFoldersFilePath );
+
+	// Ensure that folders file path ends with a back-slash
+	if( g_lpszFoldersFilePath[ lstrlen( g_lpszFoldersFilePath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+	{
+		// Folders file path does not end with a back-slash
+
+		// Append a back-slash onto folders file path
+		lstrcat( g_lpszFoldersFilePath, ASCII_BACK_SLASH_STRING );
+
+	} // End of folders file path does not end with a back-slash
+
+	// Append folders file name onto folders file path
+	lstrcat( g_lpszFoldersFilePath, FOLDERS_FILE_NAME );
+
+	// Note that we need to store the folders file path like this as the current folder will change
+
 	// Clear message structure
 	ZeroMemory( &msg, sizeof( msg ) );
 
@@ -446,7 +485,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			UpdateWindow( hWndMain );
 
 			// Load folders into combo box window
-			if( !( ComboBoxWindowLoad( FOLDERS_FILE_NAME ) ) )
+			if( !( ComboBoxWindowLoad( g_lpszFoldersFilePath ) ) )
 			{
 				// Unable to load folders into combo box window
 
@@ -497,6 +536,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 		MessageBox( NULL, UNABLE_TO_REGISTER_MAIN_WINDOW_CLASS_ERROR_MESSAGE, ERROR_MESSAGE_CAPTION, ( MB_OK | MB_ICONERROR ) );
 
 	} // End of unable to register main window class
+
+	// Free global memory
+	delete [] g_lpszFoldersFilePath;
 
 	return msg.wParam;
 

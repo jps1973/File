@@ -305,11 +305,6 @@ int ComboBoxWindowSelectItem( int nWhichItem, void( *lpSelectionChangeFunction )
 {
 	int nResult;
 
-	int nInitialSelection;
-
-	// Get initial selection
-	nInitialSelection = SendMessage( g_hWndComboBox, CB_GETCURSEL, ( WPARAM )NULL, ( LPARAM )NULL );
-
 	// Select combo box item
 	nResult = SendMessage( g_hWndComboBox, CB_SETCURSEL, ( WPARAM )nWhichItem, ( LPARAM )NULL );
 
@@ -318,36 +313,21 @@ int ComboBoxWindowSelectItem( int nWhichItem, void( *lpSelectionChangeFunction )
 	{
 		// Successfully selected combo box item
 
-		// See if an item was selected initially
-		if( nInitialSelection == CB_ERR )
+		// Allocate string memory
+		LPTSTR lpszSelected = new char[ STRING_LENGTH + sizeof( char ) ];
+
+		// Get selected item text
+		if( SendMessage( g_hWndComboBox, CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszSelected ) )
 		{
-			// No item was selected initially
+			// Successfully got selected item text
 
-			// Allocate string memory
-			LPTSTR lpszSelected = new char[ STRING_LENGTH + sizeof( char ) ];
+			// Call selection change function
+			( *lpSelectionChangeFunction )( lpszSelected );
 
-			// Get selected item text
-			if( SendMessage( g_hWndComboBox, CB_GETLBTEXT, ( WPARAM )nWhichItem, ( LPARAM )lpszSelected ) )
-			{
-				// Successfully got selected item text
+		} // End of successfully got selected item text
 
-				// Call selection change function
-				( *lpSelectionChangeFunction )( lpszSelected );
-
-			} // End of successfully got selected item text
-
-			// Free string memory
-			delete [] lpszSelected;
-
-		} // End of no item was selected initially
-		else
-		{
-			// An item was selected initially
-
-			// We don't need to do anything here.
-			// If an item was selected, the selection change function will be called from the command message
-
-		} // End of an item was selected initially
+		// Free string memory
+		delete [] lpszSelected;
 
 	} // End of successfully selected combo box item
 
