@@ -1,5 +1,8 @@
 C:\Users\jimps\Dropbox\Documents\Code
+C:\Users\jimps\Dropbox\Documents\Code\Download
 C:\Users\jimps\Dropbox\Documents\Code\File
+C:\Users\jimps\Dropbox\Documents\Code\Find
 C:\Users\jimps\Dropbox\Documents\Code\InputBox
 C:\Users\jimps\Dropbox\Documents\Code\Internet
+C:\Users\jimps\Dropbox\Documents\Code\InternetCache
 C:\Users\jimps\Pictures

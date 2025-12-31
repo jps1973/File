@@ -434,6 +434,9 @@ int ListViewWindowPopulate()
 						// Add found item to list view window
 						SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
+						// Update return value
+						nResult ++;
+
 						// Update list view item structure for next item
 						lvItem.iItem ++;
 
@@ -474,6 +477,9 @@ int ListViewWindowPopulate()
 
 					// Add found item to list view window
 					SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+					// Update return value
+					nResult ++;
 
 					// Update list view item structure for next item
 					lvItem.iItem ++;

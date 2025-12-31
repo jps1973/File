@@ -13,13 +13,56 @@ void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 	if( SetCurrentDirectory( lpszItemText ) )
 	{
 		// Successfully set current folder
+		int nItemCount;
+
+		// Allocate string memory
+		LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Populate list view window
-		ListViewWindowPopulate();
+		nItemCount = ListViewWindowPopulate();
+
+		// Format status message
+		wsprintf( lpszStatusMessage, LIST_VIEW_WINDOW_POPULATE_STATUS_MESSAGE_FORMAT_STRING, lpszItemText, nItemCount );
+
+		// Show status message in status bar window
+		StatusBarWindowSetText( lpszStatusMessage );
+
+		// Free string memory
+		delete [] lpszStatusMessage;
 
 	} // End of successfully set current folder
 
 } // End of function ComboBoxWindowSelectionChangeFunction
+
+BOOL Populate( LPCTSTR lpszFolderPath )
+{
+	BOOL bResult = FALSE;
+
+	int nFolderPosition;
+
+	// Add folder to combo box window
+	nFolderPosition = ComboBoxWindowAddString( lpszFolderPath );
+
+	// Ensure that folder was added to combo box window
+	if( nFolderPosition >= 0 )
+	{
+		// Successfully added folder to combo box window
+
+		// Select folder on combo box window
+		if( ComboBoxWindowSelectItem( nFolderPosition, &ComboBoxWindowSelectionChangeFunction ) != CB_ERR )
+		{
+			// Successfully selected folder on combo box window
+
+			// Update return value
+			bResult = TRUE;
+
+		} // End of successfully selected folder on combo box window
+
+	} // End of successfully added folder to combo box window
+
+	return bResult;
+
+} // End of function Populate
 
 BOOL ListViewWindowDoubleClickFunction( LPCTSTR lpszItemPath )
 {
@@ -29,24 +72,9 @@ BOOL ListViewWindowDoubleClickFunction( LPCTSTR lpszItemPath )
 	if( GetFileAttributes( lpszItemPath ) & FILE_ATTRIBUTE_DIRECTORY )
 	{
 		// Item is a folder
-		int nFolderPosition;
 
-		// Add folder to combo box window
-		nFolderPosition = ComboBoxWindowAddString( lpszItemPath );
-
-		// Ensure that folder was added to combo box window
-		if( nFolderPosition >= 0 )
-		{
-			// Successfully added folder to combo box window
-
-			// Select folder on combo box window
-			if( ComboBoxWindowSelectItem( nFolderPosition, &ComboBoxWindowSelectionChangeFunction ) != CB_ERR )
-			{
-				// Successfully selected folder on combo box window
-
-			} // End of successfully selected folder on combo box window
-
-		} // End of successfully added folder to combo box window
+		// Populate to folder
+		bResult = Populate( lpszItemPath );
 
 	} // End of item is a folder
 	else
@@ -197,6 +225,30 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 			// Select command
 			switch( LOWORD( wParam ) )
 			{
+				case IDM_FILE_SELECT_FOLDER:
+				{
+					// A file select folder command
+
+					// Allocate string memory
+					LPTSTR lpszFolderPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+					// Browse for folder
+					if( BrowseForFolder( BROWSE_FOR_FOLDER_TITLE, lpszFolderPath, hWndMain ) )
+					{
+						// Successfully browsed for folder
+
+						// Populate to folder
+						Populate( lpszFolderPath );
+
+					} // End of successfully browsed for folder
+
+					// Free string memory
+					delete [] lpszFolderPath;
+
+					// Break out of switch
+					break;
+
+				} // End of a file select folder command
 				case IDM_FILE_EXIT:
 				{
 					// A file exit command
