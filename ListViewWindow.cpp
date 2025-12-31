@@ -222,8 +222,23 @@ BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszIt
 
 			} // End of item path does not end with a back-slash
 
-			// Append item text onto item path
-			lstrcat( lpszItemPath, lpszItemText );
+			// See if item is a folder
+			if( lpszItemText[ 0 ] == LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX )
+			{
+				// Item is a folder
+
+				// Append item text (after folder prefix) onto item path
+				lstrcat( lpszItemPath, ( lpszItemText + sizeof( LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX ) ) );
+
+			} // End of item is a folder
+			else
+			{
+				// Item is a file
+
+				// Append item text onto item path
+				lstrcat( lpszItemPath, lpszItemText );
+
+			} // End of item is a file
 
 			// Update return value
 			bResult = TRUE;
@@ -360,7 +375,8 @@ int ListViewWindowPopulate()
 		int nImageListIndex;
 
 		// Allocate string memory
-		LPTSTR lpszModified = new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszModified				= new char[ STRING_LENGTH + sizeof( char ) ];
+		LPTSTR lpszFolderDisplayText	= new char[ STRING_LENGTH + sizeof( char ) ];
 
 		// Clear list view item structure
 		ZeroMemory( &lvItem, sizeof( lvItem ) );
@@ -389,9 +405,12 @@ int ListViewWindowPopulate()
 					// Get image list index for item
 					nImageListIndex = SystemImageListGetItemIndex( wfd.cFileName );
 
+					// Format folder display text
+					wsprintf( lpszFolderDisplayText, LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_FORMAT_STRING, LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX, wfd.cFileName );
+
 					// Update list view item structure for found item name
 					lvItem.iSubItem	= LIST_VIEW_WINDOW_NAME_COLUMN_ID;
-					lvItem.pszText	= wfd.cFileName;
+					lvItem.pszText	= lpszFolderDisplayText;
 					lvItem.iImage	= nImageListIndex;
 
 					// Add found item to list view window
@@ -473,6 +492,7 @@ int ListViewWindowPopulate()
 
 		// Free string memory
 		delete [] lpszModified;
+		delete [] lpszFolderDisplayText;
 
 	} // End of successfully found first item in current folder
 
