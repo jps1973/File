@@ -13,7 +13,7 @@
 #define LIST_VIEW_WINDOW_CLASS_NAME												WC_LISTVIEW
 
 #define LIST_VIEW_WINDOW_EXTENDED_STYLE											LVS_EX_FULLROWSELECT
-#define LIST_VIEW_WINDOW_STYLE													( WS_CHILD | WS_VISIBLE | LVS_REPORT )
+#define LIST_VIEW_WINDOW_STYLE													( WS_CHILD | WS_VISIBLE | LVS_EDITLABELS | LVS_REPORT )
 #define LIST_VIEW_WINDOW_TEXT													NULL
 
 #define LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH									100
@@ -46,8 +46,10 @@ BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
 BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemPath );
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
+LRESULT ListViewWindowHandleNotifyMessage( HWND hWndMain, WPARAM, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
 
 BOOL ListViewWindowMove( int nLeft, int nTop, int nWidth, int nHeight );
 
 int ListViewWindowPopulate();
+
+BOOL ListViewWindowSetItemText( int nWhichItem, int nWhichSubItem, LPCTSTR lpszItemText );

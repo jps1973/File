@@ -254,11 +254,15 @@ BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszIt
 
 } // End of function ListViewWindowGetItemPath
 
-BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
+LRESULT ListViewWindowHandleNotifyMessage( HWND hWndMain, WPARAM wParam, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
 {
-	BOOL bResult = FALSE;
+	LRESULT lResult = 0;
 
 	LPNMLISTVIEW lpNmListView;
+
+	// Static variables
+	static LPTSTR s_lpszOriginalName = NULL;
+	static BOOL s_bIsFolder;
 
 	// Get list view notify message handler
 	lpNmListView = ( LPNMLISTVIEW )lParam;
@@ -279,7 +283,7 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleCl
 				// Successfully got file path
 
 				// Call double click function
-				bResult = ( *lpDoubleClickFunction )( lpszFilePath );
+				( *lpDoubleClickFunction )( lpszFilePath );
 
 			} // End of successfully got file path
 
@@ -290,6 +294,68 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleCl
 			break;
 
 		} // End of a double click notify message
+		case LVN_BEGINLABELEDIT:
+		{
+			// A begin label edit function
+			HWND hWndEdit;
+
+			// Clear original name
+			s_lpszOriginalName = NULL;
+
+			// Get edit window
+			hWndEdit = ( HWND )SendMessage( g_hWndListView, LVM_GETEDITCONTROL, ( WPARAM )NULL, ( LPARAM )NULL );
+
+			// Ensure that edit window was got
+			if( hWndEdit )
+			{
+				// Successfully got edit window
+
+				// Allocate string memory
+				LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get edit window text
+				if( GetWindowText( hWndEdit, lpszItemText, STRING_LENGTH ) )
+				{
+					// Successfully got edit window text
+
+					// Allocate global memory
+					s_lpszOriginalName = new char[ STRING_LENGTH + sizeof( char ) ];
+
+					// See if item is a folder
+					if( lpszItemText[ 0 ] == LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX )
+					{
+						// Item is a folder
+
+						// Copy item text ( after prefix) into original name
+						lstrcpy( s_lpszOriginalName, ( lpszItemText + sizeof( LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX ) ) );
+
+						// Update static folder value
+						s_bIsFolder = TRUE;
+
+					} // End of item is a folder
+					else
+					{
+						// Item is a file
+
+						// Copy item text into original name
+						lstrcpy( s_lpszOriginalName, lpszItemText );
+
+						// Update static folder value
+						s_bIsFolder = FALSE;
+
+					} // End of item is a file
+
+				} // End of successfully got edit window text
+
+				// Free string memory
+				delete [] lpszItemText;
+
+			} // End of successfully got edit window
+
+			// Break out of switch
+			break;
+
+		} // End of a begin label edit function
 		case LVN_COLUMNCLICK:
 		{
 			// A column click notify message
@@ -301,6 +367,96 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleCl
 			break;
 
 		} // End of a column click notify message
+		case LVN_ENDLABELEDIT:
+		{
+			// An end label edit function
+			HWND hWndEdit;
+
+			// Get edit window
+			hWndEdit = ( HWND )SendMessage( g_hWndListView, LVM_GETEDITCONTROL, ( WPARAM )NULL, ( LPARAM )NULL );
+
+			// Ensure that edit window was got
+			if( hWndEdit )
+			{
+				// Successfully got edit window
+
+				// Allocate string memory
+				LPTSTR lpszItemText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+				// Get edit window text
+				if( GetWindowText( hWndEdit, lpszItemText, STRING_LENGTH ) )
+				{
+					// Successfully got edit window text
+
+					// Ensure that text has changed
+					if( lstrcmp( s_lpszOriginalName, lpszItemText ) != 0 )
+					{
+						// Text has changed
+
+						// Rename item
+						if( MoveFile( s_lpszOriginalName, lpszItemText ) )
+						{
+							// Successfully renamed item
+
+							// See if item is a folder
+							if( s_bIsFolder )
+							{
+								// Item is a folder
+								NMLVDISPINFO *lpNmLvDispInfo;
+
+								// Allocate string memory
+								LPTSTR lpszFolderDisplayText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+								// Get list view information
+								lpNmLvDispInfo = ( NMLVDISPINFO * )lParam;
+
+								// Format folder display text
+								wsprintf( lpszFolderDisplayText, LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_FORMAT_STRING, LIST_VIEW_WINDOW_FOLDER_DISPLAY_TEXT_PREFIX, lpszItemText );
+
+								// Set item text to contain folder display text
+								ListViewWindowSetItemText( lpNmLvDispInfo->item.iItem, LIST_VIEW_WINDOW_NAME_COLUMN_ID, lpszFolderDisplayText );
+
+								// Free string memory
+								delete [] lpszFolderDisplayText;
+
+								// Keep return value as it is
+								// We have updated the label, so don't want it updated again
+
+							} // End of item is a folder
+							else
+							{
+								// Item is a file
+
+								// Update return value to update label
+								lResult = TRUE;
+
+							} // End of item is a file
+
+						} // End of successfully renamed item
+
+					} // End of text has changed
+
+				} // End of successfully got edit window text
+
+				// Free string memory
+				delete [] lpszItemText;
+
+			} // End of successfully got edit window
+
+			// See if original name is valid
+			if( s_lpszOriginalName )
+			{
+				// Original name is valid
+
+				// Free string memory
+				delete [] s_lpszOriginalName;
+
+			} // End of original name is valid
+
+			// Break out of switch
+			break;
+
+		} // End of an end label edit function
 		case LVN_ITEMCHANGED:
 		{
 			// A list view item changed notify message
@@ -319,7 +475,7 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleCl
 					// Successfully got item path
 
 					// Call status function
-					bResult = ( *lpStatusFunction )( lpszItemPath );
+					( *lpStatusFunction )( lpszItemPath );
 
 				} // End of successfully got item path
 
@@ -336,7 +492,8 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleCl
 		{
 			// Default notification code
 
-			// No need to do anything here, just continue with default result
+			// Call default procedure
+			lResult = DefWindowProc( hWndMain, WM_NOTIFY, wParam, lParam );
 
 			// Break out of switch
 			break;
@@ -345,7 +502,7 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, BOOL( *lpDoubleCl
 
 	}; // End of selection for list view window notification code
 
-	return bResult;
+	return lResult;
 
 } // End of function ListViewWindowHandleNotifyMessage
 
@@ -505,3 +662,26 @@ int ListViewWindowPopulate()
 	return nResult;
 
 } // End of function ListViewWindowPopulate
+
+BOOL ListViewWindowSetItemText( int nWhichItem, int nWhichSubItem, LPCTSTR lpszItemText )
+{
+	BOOL bResult = FALSE;
+
+	LVITEM lvItem;
+
+	// Clear list view item structure
+	ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+	// Initialise list view item structure
+	lvItem.mask			= LVIF_TEXT;
+	lvItem.cchTextMax	= STRING_LENGTH;
+	lvItem.iItem		= nWhichItem;
+	lvItem.iSubItem		= nWhichSubItem;
+	lvItem.pszText		= ( LPTSTR )lpszItemText;
+
+	// Add found item to list view window
+	bResult = SendMessage( g_hWndListView, LVM_SETITEM, ( WPARAM )NULL, ( LPARAM )&lvItem );
+
+	return bResult;
+
+} // End of function ListViewWindowSetItemText

@@ -361,14 +361,7 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				// Notify message is from list view window
 
 				// Handle notify message from list view window
-				if( !( ListViewWindowHandleNotifyMessage( wParam, lParam, &ListViewWindowDoubleClickFunction, &StatusBarWindowSetText ) ) )
-				{
-					// Notify message was not handled from list view window
-
-					// Call default procedure
-					lr = DefWindowProc( hWndMain, uMessage, wParam, lParam );
-
-				} // End of notify message was not handled from list view window
+				lr = ListViewWindowHandleNotifyMessage( hWndMain, wParam, lParam, &ListViewWindowDoubleClickFunction, &StatusBarWindowSetText );
 
 			} // End of notify message is from list view window
 			else
