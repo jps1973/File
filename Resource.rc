@@ -16,6 +16,9 @@ BEGIN
 	BEGIN
 		MENUITEM "Select Folder...",											IDM_FILE_SELECT_FOLDER
 		MENUITEM SEPARATOR
+		MENUITEM "Copy to...",													IDM_FILE_COPY_TO
+		MENUITEM "Move to...",													IDM_FILE_MOVE_TO
+		MENUITEM SEPARATOR
 		MENUITEM "E&xit",														IDM_FILE_EXIT
 	END
 	POPUP "&Help"

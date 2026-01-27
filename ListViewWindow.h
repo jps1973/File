@@ -38,6 +38,8 @@ typedef enum
 
 BOOL IsListViewWindow( HWND hWndSupplied );
 
+int ListViewWindowActionSelectedItems();
+
 int ListViewWindowAutoSizeAllColumns();
 
 int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lParamColumn );
@@ -45,6 +47,8 @@ int CALLBACK ListViewWindowCompare( LPARAM lParam1, LPARAM lParam2, LPARAM lPara
 BOOL ListViewWindowCreate( HWND hWndParent, HINSTANCE hInstance, HFONT hFont );
 
 BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemPath );
+
+BOOL ListViewWindowGetItemText( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemPath );
 
 LRESULT ListViewWindowHandleNotifyMessage( HWND hWndMain, WPARAM, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) );
 

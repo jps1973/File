@@ -24,6 +24,48 @@ BOOL IsListViewWindow( HWND hWndSupplied )
 
 } // End of function IsListViewWindow
 
+int ListViewWindowActionSelectedItems()
+{
+	int nResult = 0;
+
+	int nItemCount;
+	int nWhichItem;
+
+	// Allocate string memory
+	LPTSTR lpszItemName = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Count items on list view window
+	nItemCount = SendMessage( g_hWndListView, LVM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+
+	// Loop through items on list view window
+	for( nWhichItem = 0; nWhichItem < nItemCount; nWhichItem ++ )
+	{
+		// See if current item is selected
+		if( SendMessage( g_hWndListView, LVM_GETITEMSTATE, ( WPARAM )nWhichItem, ( LPARAM )LVIS_SELECTED ) & LVIS_SELECTED )
+		{
+			// Current item is selected
+
+			// Get current item name
+			if( ListViewWindowGetItemText( nWhichItem, LIST_VIEW_WINDOW_NAME_COLUMN_ID, lpszItemName ) )
+			{
+				// Successfully got current item name
+
+				// Display current item name
+				MessageBox( NULL, lpszItemName, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+
+			} // End of successfully got current item name
+
+		} // End of current item is selected
+
+	}; // End of loop through items on list view window
+
+	// Free string memory
+	delete [] lpszItemName;
+
+	return nResult;
+
+} // End of function ListViewWindowActionSelectedItems
+
 int ListViewWindowAutoSizeAllColumns()
 {
 	int nResult = 0;
@@ -253,6 +295,29 @@ BOOL ListViewWindowGetItemPath( int nWhichItem, int nWhichSubItem, LPTSTR lpszIt
 	return bResult;
 
 } // End of function ListViewWindowGetItemPath
+
+BOOL ListViewWindowGetItemText( int nWhichItem, int nWhichSubItem, LPTSTR lpszItemText )
+{
+	BOOL bResult = FALSE;
+
+	LVITEM lvItem;
+
+	// Clear list view item structure
+	ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+	// Initialise list view item structure
+	lvItem.mask			= LVIF_TEXT;
+	lvItem.cchTextMax	= STRING_LENGTH;
+	lvItem.iItem		= nWhichItem;
+	lvItem.iSubItem		= nWhichSubItem;
+	lvItem.pszText		= lpszItemText;
+
+	// Get item text from list view window
+	bResult = SendMessage( g_hWndListView, LVM_GETITEM, ( WPARAM )NULL, ( LPARAM )&lvItem );
+
+	return bResult;
+
+} // End of function ListViewWindowGetItemText
 
 LRESULT ListViewWindowHandleNotifyMessage( HWND hWndMain, WPARAM wParam, LPARAM lParam, BOOL( *lpDoubleClickFunction )( LPCTSTR lpszItemText ), BOOL( *lpStatusFunction )( LPCTSTR lpszItemText ) )
 {

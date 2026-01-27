@@ -249,6 +249,28 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 					break;
 
 				} // End of a file select folder command
+				case IDM_FILE_COPY_TO:
+				{
+					// A file copy to command
+
+					// Display selected files
+					ListViewWindowActionSelectedItems();
+
+					// Break out of switch
+					break;
+
+				} // End of a copy to command
+				case IDM_FILE_MOVE_TO:
+				{
+					// A file move to command
+
+					// Display selected files
+					ListViewWindowActionSelectedItems();
+
+					// Break out of switch
+					break;
+
+				} // End of a move to command
 				case IDM_FILE_EXIT:
 				{
 					// A file exit command
