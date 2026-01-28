@@ -38,11 +38,14 @@
 
 #define FOLDERS_FILE_NAME														"Folders.txt"
 
+#define SELECT_FOLDER_TITLE_FILE_COPY_TO										"Select Folder to Copy Files To"
+#define SELECT_FOLDER_TITLE_FILE_MOVE_TO										"Select Folder to Move Files To"
+
 #define ABOUT_MESSAGE_TEXT														"File\r\n"							\
 																				"\r\n"								\
 																				"Written by Jim Smith\r\n"			\
 																				"\r\n"								\
-																				"December 2025"
+																				"January 2026"
 
 #define UNABLE_TO_SAVE_FOLDERS_WARNING_MESSAGE									"Unable to Save Folders.\r\n\r\nDo You Want To Close?"
 

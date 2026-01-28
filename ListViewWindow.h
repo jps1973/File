@@ -8,6 +8,7 @@
 #include "Ascii.h"
 #include "Common.h"
 
+#include "BrowseForFolder.h"
 #include "SystemImageList.h"
 
 #define LIST_VIEW_WINDOW_CLASS_NAME												WC_LISTVIEW
@@ -38,7 +39,9 @@ typedef enum
 
 BOOL IsListViewWindow( HWND hWndSupplied );
 
-int ListViewWindowActionSelectedItems();
+int ListViewWindowActionSelectedItems( BOOL( *lpActionFunction )( LPCTSTR lpszItemText, LPCTSTR lpszDestinationFolderPath ), LPCTSTR lpszDestinationFolderPath );
+
+int ListViewWindowActionSelectedItems( HWND hWndOwner, LPCTSTR lpszSelectFolderTitle, BOOL( *lpActionFunction )( LPCTSTR lpszItemText, LPCTSTR lpszDestinationFolderPath ) );
 
 int ListViewWindowAutoSizeAllColumns();
 

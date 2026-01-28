@@ -7,6 +7,60 @@
 // Global variables
 static LPTSTR g_lpszFoldersFilePath;
 
+BOOL CopyActionFunction( LPCTSTR lpszItemName, LPCTSTR lpszDestinationFolderPath )
+{
+	BOOL bResult = FALSE;
+
+	// Allocate string memory
+	LPTSTR lpszDestinationItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Copy destination folder path into destination item path
+	lstrcpy( lpszDestinationItemPath, lpszDestinationFolderPath );
+
+	// Append item name onto destination item path
+	lstrcat( lpszDestinationItemPath, lpszItemName );
+
+	// Copy item
+	if( CopyFile( lpszItemName, lpszDestinationItemPath, TRUE ) )
+	{
+		// Successfully copied item
+
+		// Update return value
+		bResult = TRUE;
+
+	} // End of successfully copied item
+
+	return bResult;
+
+} // End of function CopyActionFunction
+
+BOOL MoveActionFunction( LPCTSTR lpszItemName, LPCTSTR lpszDestinationFolderPath )
+{
+	BOOL bResult = FALSE;
+
+	// Allocate string memory
+	LPTSTR lpszDestinationItemPath = new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Copy destination folder path into destination item path
+	lstrcpy( lpszDestinationItemPath, lpszDestinationFolderPath );
+
+	// Append item name onto destination item path
+	lstrcat( lpszDestinationItemPath, lpszItemName );
+
+	// Move item
+	if( MoveFile( lpszItemName, lpszDestinationItemPath ) )
+	{
+		// Successfully moved item
+
+		// Update return value
+		bResult = TRUE;
+
+	} // End of successfully moved item
+
+	return bResult;
+
+} // End of function MoveActionFunction
+
 void ComboBoxWindowSelectionChangeFunction( LPCTSTR lpszItemText )
 {
 	// Set current folder
@@ -253,8 +307,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				{
 					// A file copy to command
 
-					// Display selected files
-					ListViewWindowActionSelectedItems();
+					// Copy selected files
+					ListViewWindowActionSelectedItems( hWndMain, SELECT_FOLDER_TITLE_FILE_COPY_TO, &CopyActionFunction );
 
 					// Break out of switch
 					break;
@@ -264,8 +318,8 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				{
 					// A file move to command
 
-					// Display selected files
-					ListViewWindowActionSelectedItems();
+					// Move selected files
+					ListViewWindowActionSelectedItems( hWndMain, SELECT_FOLDER_TITLE_FILE_MOVE_TO, &MoveActionFunction );
 
 					// Break out of switch
 					break;

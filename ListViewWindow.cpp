@@ -24,7 +24,7 @@ BOOL IsListViewWindow( HWND hWndSupplied )
 
 } // End of function IsListViewWindow
 
-int ListViewWindowActionSelectedItems()
+int ListViewWindowActionSelectedItems( BOOL( *lpActionFunction )( LPCTSTR lpszItemText, LPCTSTR lpszDestinationFolderPath ), LPCTSTR lpszDestinationFolderPath )
 {
 	int nResult = 0;
 
@@ -50,8 +50,15 @@ int ListViewWindowActionSelectedItems()
 			{
 				// Successfully got current item name
 
-				// Display current item name
-				MessageBox( NULL, lpszItemName, INFORMATION_MESSAGE_CAPTION, ( MB_OK | MB_ICONINFORMATION ) );
+				// Action current item
+				if( ( *lpActionFunction )( lpszItemName, lpszDestinationFolderPath ) )
+				{
+					// Successfully actioned current item
+
+					// Update return value
+					nResult ++;
+
+				} // End of successfully actioned current item
 
 			} // End of successfully got current item name
 
@@ -61,6 +68,40 @@ int ListViewWindowActionSelectedItems()
 
 	// Free string memory
 	delete [] lpszItemName;
+
+	return nResult;
+
+} // End of function ListViewWindowActionSelectedItems
+
+int ListViewWindowActionSelectedItems( HWND hWndOwner, LPCTSTR lpszSelectFolderTitle, BOOL( *lpActionFunction )( LPCTSTR lpszItemText, LPCTSTR lpszDestinationFolderPath ) )
+{
+	int nResult = 0;
+
+	// Allocate string memory
+	LPTSTR lpszDestinationFolderPath =  new char[ STRING_LENGTH + sizeof( char ) ];
+
+	// Get destination folder path
+	if( BrowseForFolder( lpszSelectFolderTitle, lpszDestinationFolderPath, hWndOwner ) )
+	{
+		// Successfully got destination folder path
+
+		// Ensure that destination folder path ends with a back-slash
+		if( lpszDestinationFolderPath[ lstrlen( lpszDestinationFolderPath ) - sizeof( char ) ] != ASCII_BACK_SLASH_CHARACTER )
+		{
+			// Destination folder path does not end with a back-slash
+
+			// Append a back-slash onto destination folder path
+			lstrcat( lpszDestinationFolderPath, ASCII_BACK_SLASH_STRING );
+
+		} // End of destination folder path does not end with a back-slash
+
+		// Action selected items
+		nResult = ListViewWindowActionSelectedItems( lpActionFunction, lpszDestinationFolderPath );
+
+	} // End of successfully got destination folder path
+
+	// Free string memory
+	delete [] lpszDestinationFolderPath;
 
 	return nResult;
 
