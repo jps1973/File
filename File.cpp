@@ -306,9 +306,22 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				case IDM_FILE_COPY_TO:
 				{
 					// A file copy to command
+					int nItemCount;
 
-					// Copy selected files
-					ListViewWindowActionSelectedItems( hWndMain, SELECT_FOLDER_TITLE_FILE_COPY_TO, &CopyActionFunction );
+					// Allocate string memory
+					LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+					// Copy selected items
+					nItemCount = ListViewWindowActionSelectedItems( hWndMain, SELECT_FOLDER_TITLE_FILE_COPY_TO, &CopyActionFunction );
+
+					// Format status message
+					wsprintf( lpszStatusMessage, FILE_COPY_TO_STATUS_MESSAGE_FORMAT_STRING, nItemCount );
+
+					// Show status message on status bar window
+					StatusBarWindowSetText( lpszStatusMessage );
+
+					// Free string memory
+					delete [] lpszStatusMessage;
 
 					// Break out of switch
 					break;
@@ -317,9 +330,22 @@ LRESULT CALLBACK MainWindowProcedure( HWND hWndMain, UINT uMessage, WPARAM wPara
 				case IDM_FILE_MOVE_TO:
 				{
 					// A file move to command
+					int nItemCount;
 
-					// Move selected files
-					ListViewWindowActionSelectedItems( hWndMain, SELECT_FOLDER_TITLE_FILE_MOVE_TO, &MoveActionFunction );
+					// Allocate string memory
+					LPTSTR lpszStatusMessage = new char[ STRING_LENGTH + sizeof( char ) ];
+
+					// Move selected items
+					nItemCount = ListViewWindowActionSelectedItems( hWndMain, SELECT_FOLDER_TITLE_FILE_MOVE_TO, &MoveActionFunction );
+
+					// Format status message
+					wsprintf( lpszStatusMessage, FILE_MOVE_TO_STATUS_MESSAGE_FORMAT_STRING, nItemCount );
+
+					// Show status message on status bar window
+					StatusBarWindowSetText( lpszStatusMessage );
+
+					// Free string memory
+					delete [] lpszStatusMessage;
 
 					// Break out of switch
 					break;

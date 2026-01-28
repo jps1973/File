@@ -41,6 +41,9 @@
 #define SELECT_FOLDER_TITLE_FILE_COPY_TO										"Select Folder to Copy Files To"
 #define SELECT_FOLDER_TITLE_FILE_MOVE_TO										"Select Folder to Move Files To"
 
+#define FILE_COPY_TO_STATUS_MESSAGE_FORMAT_STRING								"Copied %d items"
+#define FILE_MOVE_TO_STATUS_MESSAGE_FORMAT_STRING								"Moved %d items"
+
 #define ABOUT_MESSAGE_TEXT														"File\r\n"							\
 																				"\r\n"								\
 																				"Written by Jim Smith\r\n"			\
